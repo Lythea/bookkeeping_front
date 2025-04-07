@@ -1,12 +1,17 @@
 "use client";
 import { useRouter } from "next/navigation";
+import Cookies from "universal-cookie";
 
 export default function Header() {
   const router = useRouter();
+  const cookies = new Cookies(); // Create an instance of Cookies
 
   const handleLogout = () => {
-    document.cookie = "role=; Max-Age=0"; // Clear auth cookie
-    router.push("/"); // Redirect to homepage or login
+    // Iterate over all cookies and remove each one
+    Object.keys(cookies.getAll()).forEach((cookieName) => {
+      cookies.remove(cookieName, { path: "/" });
+    });
+    router.push("/"); // Redirect to the homepage
   };
 
   return (

@@ -6,7 +6,6 @@ const menuItems = [
   { name: "Dashboard", path: "/admin/dashboard" },
   { name: "Clients", path: "/admin/clients" },
   { name: "Services", path: "/admin/services" },
-  { name: "Inquiries", path: "/admin/inquiries" },
   { name: "Transactions", path: "/admin/transactions" },
   { name: "Tax Calendar", path: "/admin/taxcalendar" },
 ];

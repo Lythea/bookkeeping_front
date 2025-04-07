@@ -1,9 +1,16 @@
 "use client";
 import { useState, useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { AppDispatch } from "@/app/redux/store";
 
+import {
+  addTransactionThunk,
+  deleteTransactionThunk,
+} from "@/app/redux/services/transactionService"; // <-- UPDATE THIS TO YOUR CORRECT PATH
 type AppointmentProps = {
   data: any[]; // Accept the data prop as an array
 };
+
 interface FormData {
   service: string;
   name: string;
@@ -13,9 +20,11 @@ interface FormData {
   date: string;
   status: string;
   inquiries: any[];
-  [key: string]: string | any[]; // Allows dynamic indexing with string keys
+  transact: string; // Ensure transact is defined in the form data as well
 }
 export default function Appointment({ data }: AppointmentProps) {
+  const dispatch = useDispatch<AppDispatch>();
+
   const [formData, setFormData] = useState<FormData>({
     service: "",
     name: "",
@@ -23,7 +32,8 @@ export default function Appointment({ data }: AppointmentProps) {
     email: "",
     contact: "",
     date: "",
-    status: "Pending", // Default status
+    status: "Pending",
+    transact: "Pending", // Adding the transact field
     inquiries: [] as any[], // Ensure it starts as an empty array of any[]
   });
 
@@ -71,11 +81,28 @@ export default function Appointment({ data }: AppointmentProps) {
     }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    console.log("Appointment Submitted:", formData);
-    alert("Appointment successfully submitted!");
+    // Create a new object with only the required properties
+    const formattedData = {
+      id: 0,
+      ...formData,
+      inquiries: formData.inquiries.map(({ form, service }) => ({
+        service: service,
+        name: form.name,
+        price: form.price,
+      })),
+    };
+
+    // Dispatch the addTransactionThunk action
+    try {
+      await dispatch(addTransactionThunk(formattedData)); // Dispatch to Redux store
+      alert("Appointment successfully submitted!");
+    } catch (error) {
+      console.error("Error submitting the appointment:", error);
+      alert("Failed to submit appointment");
+    }
   };
 
   const filteredData = data.filter((item) =>
@@ -212,7 +239,7 @@ export default function Appointment({ data }: AppointmentProps) {
                         placeholder: "Enter your contact number",
                       },
                       {
-                        label: "Date",
+                        label: "Date of Deadline",
                         name: "date",
                         type: "date",
                         placeholder: "",
@@ -225,7 +252,7 @@ export default function Appointment({ data }: AppointmentProps) {
                         <input
                           type={field.type}
                           name={field.name}
-                          value={formData[field.name]}
+                          value={formData[field.name as keyof FormData]}
                           onChange={handleChange}
                           placeholder={field.placeholder}
                           className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"

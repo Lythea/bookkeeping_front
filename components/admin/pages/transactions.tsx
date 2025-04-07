@@ -2,83 +2,157 @@
 
 import { useState, useRef } from "react";
 import DataTable from "react-data-table-component";
-import { CSVLink } from "react-csv"; // For exporting Excel
-import { HiDotsVertical } from "react-icons/hi"; // Importing the 3-dot menu icon
+import { CSVLink } from "react-csv";
+import { HiDotsVertical } from "react-icons/hi";
+import { useDispatch, useSelector } from "react-redux";
+import { AppDispatch } from "@/app/redux/store";
+import { jsPDF } from "jspdf";
+import generateReceiptPDF from "@/components/admin/export/transactionreceipt"; // Import the generateReceiptPDF function
+import ViewTransactionModal from "@/components/admin/modal/transaction/ViewTransaction"; // Import the generateReceiptPDF function
+import HistoryInfo from "@/components/admin/modal/transaction/transactionhistoryFilter";
+
+import {
+  addTransactionThunk,
+  deleteTransactionThunk,
+} from "@/app/redux/services/transactionService"; // <-- Update this to your correct path
+
+import Status from "@/components/admin/modal/transaction/Status";
+
+interface Inquiry {
+  name: string;
+  price: string;
+  service: string;
+}
 
 interface Transaction {
   id: number;
-  transactionId: string;
-  clientName: string;
-  service: string;
-  amount: string;
+  address: string;
+  contact: string;
+  created_at: string;
   date: string;
-  paymentMethod: string;
+  email: string;
+  inquiries: Inquiry[];
+  name: string;
   status: string;
+  transact: string;
+  updated_at: string;
 }
 
-const data: Transaction[] = [
-  {
-    id: 1,
-    transactionId: "TXN123456",
-    clientName: "John Doe",
-    service: "BIR Processing",
-    amount: "$1000",
-    date: "2025-03-25",
-    paymentMethod: "Credit Card",
-    status: "Completed",
-  },
-  {
-    id: 2,
-    transactionId: "TXN789012",
-    clientName: "Jane Smith",
-    service: "SEO Optimization",
-    amount: "$500",
-    date: "2025-03-24",
-    paymentMethod: "PayPal",
-    status: "Pending",
-  },
-];
+interface Props {
+  transactions: Transaction[];
+}
 
-export default function TransactionsLayout() {
-  const [searchQuery, setSearchQuery] = useState(""); // State for search filter
-  const [menuOpen, setMenuOpen] = useState<number | null>(null); // State to track open menu by row ID
+export default function TransactionsLayout({ transactions }: Props) {
+  const dispatch = useDispatch<AppDispatch>();
 
-  // Define toggleMenu to toggle the visibility of the action menu
+  const [searchQuery, setSearchQuery] = useState("");
+  const [menuOpen, setMenuOpen] = useState<number | null>(null);
+  const [selectedTransaction, setSelectedTransaction] =
+    useState<Transaction | null>(null);
+  const [showHistoryModal, setShowHistoryModal] = useState(false);
+
+  const [showModal, setShowModal] = useState(false);
+  const [modalTransaction, setModalTransaction] = useState<Transaction | null>(
+    null
+  );
+  const [modalType, setModalType] = useState<"status" | "transact" | null>(
+    null
+  );
+  const completeTransactionData = transactions.flatMap((transaction) => {
+    // Flattening the inquiries into a string
+    const inquiriesString = transaction.inquiries
+      .map(
+        (inquiry) => `${inquiry.name} (${inquiry.service}): ${inquiry.price}`
+      )
+      .join(", "); // You can customize the format of inquiries here
+
+    // Return an array with each transaction's information
+    return {
+      id: transaction.id,
+      name: transaction.name,
+      address: transaction.address,
+      contact: transaction.contact,
+      email: transaction.email,
+      created_at: transaction.created_at,
+      date: transaction.date,
+      status: transaction.status,
+      transact: transaction.transact,
+      inquiries: inquiriesString, // Display inquiries as a single string
+      updated_at: transaction.updated_at,
+    };
+  });
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case "Pending":
+        return "bg-yellow-400 text-yellow-800";
+      case "Completed":
+        return "bg-green-400 text-green-800";
+      case "Cancelled":
+        return "bg-red-400 text-red-800";
+      default:
+        return "bg-gray-400 text-gray-800";
+    }
+  };
+
+  const getTransactColor = (transact: string) => {
+    switch (transact) {
+      case "In Progress":
+        return "bg-blue-400 text-blue-800";
+      case "Completed":
+        return "bg-green-400 text-green-800";
+      case "Failed":
+        return "bg-red-400 text-red-800";
+      default:
+        return "bg-gray-400 text-gray-800";
+    }
+  };
+
   const toggleMenu = (
     id: number,
     buttonRef: React.RefObject<HTMLButtonElement | null>
   ) => {
-    // Toggle the menu for the clicked row, close any other open menus
-    setMenuOpen((prev) => (prev === id ? null : id)); // If same row clicked, close, otherwise open new one
+    setMenuOpen((prev) => (prev === id ? null : id));
 
     if (buttonRef.current) {
       const rect = buttonRef.current.getBoundingClientRect();
       const dropdown = document.getElementById(`dropdown-${id}`);
       if (dropdown) {
-        dropdown.style.top = `${rect.bottom + window.scrollY}px`; // Position below the button
-        dropdown.style.left = `${rect.left + window.scrollX}px`; // Align with the button's left side
+        dropdown.style.top = `${rect.bottom + window.scrollY}px`;
+        dropdown.style.left = `${rect.left + window.scrollX}px`;
       }
     }
   };
+  const handleModalOpen = (row: Transaction, type: "status" | "transact") => {
+    setModalTransaction(row);
+    setModalType(type);
+    setShowModal(true);
+  };
+
+  const handleModalClose = () => {
+    setShowModal(false);
+    setModalTransaction(null);
+    setModalType(null);
+  };
   const columns = [
     {
-      name: "Transaction ID",
-      selector: (row: Transaction) => row.transactionId,
+      name: "Name",
+      selector: (row: Transaction) => row.name,
       sortable: true,
     },
     {
-      name: "Client Name",
-      selector: (row: Transaction) => row.clientName,
+      name: "Email",
+      selector: (row: Transaction) => row.email,
       sortable: true,
     },
     {
-      name: "Service",
-      selector: (row: Transaction) => row.service,
+      name: "Contact",
+      selector: (row: Transaction) => row.contact,
       sortable: true,
     },
     {
-      name: "Amount",
-      selector: (row: Transaction) => row.amount,
+      name: "Address",
+      selector: (row: Transaction) => row.address,
       sortable: true,
     },
     {
@@ -87,41 +161,68 @@ export default function TransactionsLayout() {
       sortable: true,
     },
     {
-      name: "Payment Method",
-      selector: (row: Transaction) => row.paymentMethod,
-    },
-    {
       name: "Status",
-      selector: (row: Transaction) => row.status,
+      cell: (row: Transaction) => (
+        <button
+          onClick={() => handleModalOpen(row, "status")}
+          className={`px-4 py-2 rounded-md font-semibold ${getStatusColor(
+            row.status
+          )}`}
+        >
+          {row.status}
+        </button>
+      ),
       sortable: true,
     },
     {
-      name: "Actions", // New Action column
+      name: "Transact",
+      cell: (row: Transaction) => (
+        <button
+          onClick={() => handleModalOpen(row, "transact")}
+          className={`px-4 py-2 rounded-md font-semibold ${getTransactColor(
+            row.transact
+          )}`}
+        >
+          {row.transact}
+        </button>
+      ),
+      sortable: true,
+    },
+
+    {
+      name: "Actions",
       cell: (row: Transaction) => {
-        const buttonRef = useRef<HTMLButtonElement>(null); // Create ref for the button
+        const buttonRef = useRef<HTMLButtonElement>(null);
         return (
           <div className="relative">
             <button
-              ref={buttonRef} // Attach ref to the button
-              onClick={() => toggleMenu(row.id, buttonRef)} // Pass ref to toggleMenu
+              ref={buttonRef}
+              onClick={() => toggleMenu(row.id, buttonRef)}
               className="text-gray-600 hover:text-gray-900"
             >
               <HiDotsVertical size={20} />
             </button>
-            {menuOpen === row.id && ( // Only show the menu if this row's menu is open
+            {menuOpen === row.id && (
               <div
-                id={`dropdown-${row.id}`} // Add an ID to easily target the dropdown
+                id={`dropdown-${row.id}`}
                 className="fixed min-w-[100px] bg-white shadow-md rounded-md z-50"
               >
                 <button
-                  className="block w-full text-left px-3 py-2 hover:bg-gray-200"
-                  onClick={() => alert(`Editing ${row}`)}
+                  className="block w-full text-left px-3 py-2 hover:bg-gray-200 text-blue-500"
+                  onClick={() => {
+                    setModalTransaction(row); // Set the selected transaction
+                    setShowModal(true); // Show the modal
+                    setMenuOpen(null); // Close the menu
+                  }}
                 >
-                  Edit
+                  View
                 </button>
                 <button
                   className="block w-full text-left px-3 py-2 hover:bg-gray-200 text-red-500"
-                  onClick={() => alert(`Deleting ${row}`)}
+                  onClick={() => {
+                    dispatch(deleteTransactionThunk(row.id));
+                    setMenuOpen(null); // Close the menu
+                  }}
                 >
                   Delete
                 </button>
@@ -133,39 +234,19 @@ export default function TransactionsLayout() {
     },
   ];
 
-  // Filtered data based on the search query
-  const filteredData = data.filter(
-    (item) =>
-      item.transactionId.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      item.clientName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      item.service.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      item.amount.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      item.date.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      item.paymentMethod.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      item.status.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredData = transactions.filter(
+    (item) => item.name.toLowerCase().includes(searchQuery.toLowerCase())
+    // item.date.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    // item.status.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    // item.address.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    // item.contact.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    // item.email.toLowerCase().includes(searchQuery.toLowerCase())
   );
-
-  // Function to handle Edit action
-  const handleEdit = (row: Transaction) => {
-    alert(`Editing transaction ${row.transactionId}`);
-    // You can later integrate form modal or logic to edit this transaction.
-  };
-
-  // Function to handle Delete action
-  const handleDelete = (row: Transaction) => {
-    if (
-      window.confirm(`Are you sure you want to delete ${row.transactionId}?`)
-    ) {
-      alert(`Deleting transaction ${row.transactionId}`);
-      // Add the delete logic here (e.g., delete the record from the state or database).
-    }
-  };
 
   return (
     <div className="p-6 bg-white shadow-md rounded-md">
       <h2 className="text-2xl font-semibold mb-4">Transaction List</h2>
 
-      {/* Search Input */}
       <div className="mb-4 flex items-center space-x-4">
         <input
           type="text"
@@ -175,18 +256,16 @@ export default function TransactionsLayout() {
           onChange={(e) => setSearchQuery(e.target.value)}
         />
 
-        {/* Buttons Inline - Right Aligned */}
         <div className="ml-auto flex space-x-4">
-          <button className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
-            Add Transaction
-          </button>
-          <button className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
-            Export PDF
+          <button
+            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+            onClick={() => setShowHistoryModal(true)} // Open History Modal
+          >
+            Transaction History
           </button>
 
-          {/* Export Excel Button */}
           <CSVLink
-            data={filteredData}
+            data={completeTransactionData}
             filename="transaction-list.csv"
             className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
           >
@@ -195,15 +274,35 @@ export default function TransactionsLayout() {
         </div>
       </div>
 
-      {/* DataTable with Pagination and Search Filter */}
+      {/* Data Table */}
       <DataTable
         columns={columns}
         data={filteredData}
         pagination
         striped
         highlightOnHover
-        paginationPerPage={10} // Number of rows per page
+        paginationPerPage={10}
       />
+
+      {showModal && modalTransaction && modalType && (
+        <Status
+          transaction={modalTransaction}
+          onClose={handleModalClose}
+          modalType={modalType}
+        />
+      )}
+      {showModal && modalTransaction && (
+        <ViewTransactionModal
+          transaction={modalTransaction}
+          onClose={handleModalClose}
+        />
+      )}
+      {showHistoryModal && (
+        <HistoryInfo
+          onClose={() => setShowHistoryModal(false)} // Close modal handler
+          transactionNames={transactions.map((transaction) => transaction.name)} // Pass all transaction names
+        />
+      )}
     </div>
   );
 }

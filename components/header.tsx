@@ -1,11 +1,25 @@
+// Header.tsx
 "use client";
 import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { FaBars, FaTimes } from "react-icons/fa"; // Import icons for the menu
+import LoginModal from "@/components/auth/login"; // Import the login modal
 
 export default function Header() {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false); // Manage login modal visibility
+
+  // Function to open the login modal
+  const openLoginModal = () => {
+    setIsLoginModalOpen(true);
+    setMenuOpen(false); // Close the mobile menu when opening the modal
+  };
+
+  // Function to close the login modal
+  const closeLoginModal = () => {
+    setIsLoginModalOpen(false);
+  };
 
   return (
     <header className="bg-gradient-to-r from-blue-700 to-violet-700 text-white p-4 shadow-md">
@@ -13,7 +27,7 @@ export default function Header() {
         {/* Logo on the left */}
         <div className="flex items-center gap-3">
           <Image
-            src="/logo/MainLogo-rounded.png"
+            src="/logo/logoround.png"
             alt="W&E Guarantee Bookkeeping Services Logo"
             width={40}
             height={40}
@@ -61,6 +75,16 @@ export default function Header() {
             </li>
           </ul>
         </nav>
+
+        {/* Desktop Login Button */}
+        <div className="hidden md:flex space-x-4">
+          <button
+            className="bg-blue-500 text-white hover:bg-blue-700 hover:text-white py-2 px-4 rounded-md"
+            onClick={openLoginModal} // Open login modal on click
+          >
+            Login
+          </button>
+        </div>
 
         {/* Mobile Navbar Toggle Button */}
         <button
@@ -132,8 +156,16 @@ export default function Header() {
               Contact Us
             </Link>
           </li>
+          <li>
+            <button onClick={openLoginModal} className="hover:text-blue-600">
+              Login
+            </button>
+          </li>
         </ul>
       </nav>
+
+      {/* Login Modal */}
+      <LoginModal isOpen={isLoginModalOpen} onClose={closeLoginModal} />
     </header>
   );
 }
