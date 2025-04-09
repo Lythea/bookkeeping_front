@@ -19,7 +19,7 @@ export function middleware(req: NextRequest) {
   // If the user tries to access other /admin sub-routes, check authentication
   if (req.nextUrl.pathname.startsWith('/admin')) {
     if (!authToken) {
-      return NextResponse.redirect(new URL('/login', req.url)); // Redirect to login page
+      return NextResponse.redirect(new URL('/', req.url)); // Redirect to login page
     }
   }
 

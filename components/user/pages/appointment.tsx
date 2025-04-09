@@ -23,6 +23,7 @@ interface FormData {
   transact: string; // Ensure transact is defined in the form data as well
 }
 export default function Appointment({ data }: AppointmentProps) {
+  console.log(data);
   const dispatch = useDispatch<AppDispatch>();
 
   const [formData, setFormData] = useState<FormData>({
@@ -98,15 +99,15 @@ export default function Appointment({ data }: AppointmentProps) {
     // Dispatch the addTransactionThunk action
     try {
       await dispatch(addTransactionThunk(formattedData)); // Dispatch to Redux store
-      alert("Appointment successfully submitted!");
     } catch (error) {
       console.error("Error submitting the appointment:", error);
-      alert("Failed to submit appointment");
     }
   };
 
-  const filteredData = data.filter((item) =>
-    item.service.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredData = data.filter(
+    (item) =>
+      item.service &&
+      item.service.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (

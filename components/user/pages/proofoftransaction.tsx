@@ -10,43 +10,11 @@ interface ProofOfTransaction {
   content: string;
 }
 
-// Sample proof of transaction data
-const proofOfTransactions: ProofOfTransaction[] = [
-  {
-    id: 1,
-    title: "Official Receipt #2025001",
-    description: "Payment received for business registration service.",
-    type: "embed",
-    content:
-      "https://www.facebook.com/plugins/video.php?height=476&href=https%3A%2F%2Fwww.facebook.com%2F61553389666414%2Fvideos%2F2372857219765031%2F&show_text=false&width=357&t=0",
-  },
-  {
-    id: 2,
-    title: "Bank Transfer Confirmation",
-    description: "Transaction successful via online banking.",
-    type: "embed",
-    content:
-      "https://www.facebook.com/plugins/video.php?height=476&href=https%3A%2F%2Fwww.facebook.com%2F61553389666414%2Fvideos%2F507947055346176%2F&show_text=false&width=267&t=0",
-  },
-  {
-    id: 3,
-    title: "Facebook Payment Confirmation",
-    description: "Proof of payment via Facebook Messenger.",
-    type: "embed",
-    content:
-      "https://www.facebook.com/plugins/video.php?href=https%3A%2F%2Fwww.facebook.com%2F61553389666414%2Fvideos%2F905434471435018%2F&show_text=false",
-  },
-  {
-    id: 4,
-    title: "Cash Payment Receipt",
-    description: "Manual payment received at the office.",
-    type: "embed",
-    content:
-      "https://www.facebook.com/plugins/video.php?height=476&href=https%3A%2F%2Fwww.facebook.com%2F61553389666414%2Fvideos%2F868736055224954%2F&show_text=false&width=267&t=0",
-  },
-];
+interface ProofOfTransactionProps {
+  data: ProofOfTransaction[]; // Accept the data prop
+}
 
-export default function ProofOfTransaction() {
+export default function ProofOfTransaction({ data }: ProofOfTransactionProps) {
   const [selectedProof, setSelectedProof] = useState<ProofOfTransaction | null>(
     null
   );
@@ -68,7 +36,7 @@ export default function ProofOfTransaction() {
 
               {/* Grid Layout */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mt-6 sm:mt-8">
-                {proofOfTransactions.map((proof) => (
+                {data.map((proof) => (
                   <div
                     key={proof.id}
                     className="bg-gray-50 p-4 sm:p-6 rounded-lg shadow-lg transition-transform hover:scale-105 duration-300 cursor-pointer h-full flex flex-col items-center justify-between"

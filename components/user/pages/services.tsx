@@ -1,66 +1,20 @@
-export default function Services() {
-  const services = [
-    {
-      id: 1,
-      title: "Business Permit and Licensing Office",
-      description: "Processing and renewal of business permits.",
-    },
-    {
-      id: 2,
-      title: "BIR Registration",
-      description: "Assistance with tax identification and registration.",
-    },
-    {
-      id: 3,
-      title: "DTI/SEC Registration",
-      description: "Business name and corporate entity registration.",
-    },
-    {
-      id: 4,
-      title: "Building Permit",
-      description: "Permit processing for construction projects.",
-    },
-    {
-      id: 5,
-      title: "RDO Transfer",
-      description: "Change your Revenue District Office (RDO).",
-    },
-    {
-      id: 6,
-      title: "Bookkeeping Assistance",
-      description: "Maintain accurate financial records.",
-    },
-    {
-      id: 7,
-      title: "ITR Assistance",
-      description: "Filing and preparation of Income Tax Returns.",
-    },
-    {
-      id: 8,
-      title: "Authority to Print of Receipts",
-      description: "Secure approval for printing official receipts.",
-    },
-    {
-      id: 9,
-      title: "Accredited Printer Services",
-      description: "Printing of official receipts, invoices, and more.",
-    },
-    {
-      id: 10,
-      title: "Certificate of Registration Update",
-      description: "Modify or update business registration details.",
-    },
-    {
-      id: 11,
-      title: "SSS, PhilHealth, Pag-IBIG Registration",
-      description: "Employee and business social benefit registration.",
-    },
-    {
-      id: 12,
-      title: "Online Services Assistance",
-      description: "Help with PSA, CENOMAR, passport, and NBI requests.",
-    },
-  ];
+import { FaFileAlt, FaRegMoneyBillAlt } from "react-icons/fa"; // Importing icons for file and price
+
+interface ServiceProps {
+  data: Array<{
+    id: number;
+    service: string;
+    forms: Array<{
+      name: string;
+      description: string;
+      price: string;
+      file: string;
+    }>;
+  }>;
+}
+
+export default function Services({ data }: ServiceProps) {
+  console.log(data);
 
   return (
     <div className="flex flex-col bg-white">
@@ -84,18 +38,45 @@ export default function Services() {
 
               {/* Grid Layout for Services */}
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6 mt-4 sm:mt-6">
-                {services.map((service) => (
+                {data.map((service) => (
                   <div
                     key={service.id}
-                    className="flex items-start bg-gray-50 p-4 rounded-md shadow-sm transition-transform hover:scale-105 duration-300 cursor-pointer"
+                    className="flex flex-col bg-gray-50 p-4 rounded-md shadow-lg transition-transform hover:scale-105 duration-300 cursor-pointer h-full"
                   >
-                    <div>
-                      <h3 className="text-md sm:text-lg font-semibold text-gray-800">
-                        {service.title}
+                    {/* Service Title */}
+                    <div className="flex items-center w-full  h-10">
+                      <h3 className="text-md sm:text-lg font-semibold text-gray-800 text-ellipsis overflow-hidden  w-full">
+                        {service.service}
                       </h3>
-                      <p className="text-sm sm:text-md text-gray-600 mt-1">
-                        {service.description}
-                      </p>
+                    </div>
+
+                    {/* Render each form associated with the service */}
+                    <div className="mt-2 w-full flex-grow">
+                      {service.forms.map((form, index) => (
+                        <div
+                          key={index}
+                          className="bg-white p-4 mb-4 rounded-md shadow-sm"
+                        >
+                          {/* Form Title */}
+                          <div className="flex items-center gap-2 mb-3">
+                            <FaFileAlt className="text-blue-600" />
+                            <h4 className="text-lg font-semibold text-blue-700">
+                              {form.name}
+                            </h4>
+                          </div>
+                          {/* Form Description */}
+                          <p className="text-md text-gray-600 mt-2 mb-3">
+                            {form.description}
+                          </p>
+                          {/* Form Price */}
+                          <div className="flex items-center gap-2 mt-3">
+                            <FaRegMoneyBillAlt className="text-green-600" />
+                            <p className="text-sm text-gray-500">
+                              Price: ${form.price}
+                            </p>
+                          </div>
+                        </div>
+                      ))}
                     </div>
                   </div>
                 ))}

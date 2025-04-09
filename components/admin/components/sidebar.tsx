@@ -8,6 +8,8 @@ const menuItems = [
   { name: "Services", path: "/admin/services" },
   { name: "Transactions", path: "/admin/transactions" },
   { name: "Tax Calendar", path: "/admin/taxcalendar" },
+  { name: "Announcement", path: "/admin/announcements" },
+  { name: "ProofofTransaction", path: "/admin/proofoftransactions" },
 ];
 
 export default function Sidebar() {

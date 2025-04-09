@@ -1,5 +1,3 @@
-import Header from "@/components/header";
-import Footer from "@/components/footer";
 import AboutUs from "@/components/user/pages/aboutus";
 import Service from "@/components/user/pages/services";
 import Announcement from "@/components/user/pages/announcement";
@@ -7,55 +5,56 @@ import ContactUs from "@/components/user/pages/contactus";
 import Appointment from "@/components/user/pages/appointment";
 import ProofofTransaction from "@/components/user/pages/proofoftransaction";
 
-type PageProps = {
-  params: {
-    slug: string;
-  };
-};
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
-const Page = async ({ params }: PageProps) => {
+export default async function Page({ params }: { params?: { slug?: string } }) {
+  // Guard clause for missing or undefined slug
+  if (!params || !params.slug) {
+    return <p className="text-center mt-10 text-gray-500">Page not found</p>;
+  }
+
   const { slug } = params;
-  console.log(slug);
 
-  // Initialize data
+  const pageMap: Record<
+    string,
+    { component: React.FC<any>; apiEndpoint: string }
+  > = {
+    aboutus: { component: AboutUs, apiEndpoint: "/aboutus" },
+    service: { component: Service, apiEndpoint: "/services" },
+    announcement: { component: Announcement, apiEndpoint: "/announcements" },
+    contactus: { component: ContactUs, apiEndpoint: "/contactus" },
+    appointment: { component: Appointment, apiEndpoint: "/services" },
+    proofoftransaction: {
+      component: ProofofTransaction,
+      apiEndpoint: "/proofoftransactions",
+    },
+  };
+
+  const pageData = pageMap[slug];
+
+  if (!pageData) {
+    return <p className="text-center mt-10 text-gray-500">Page not found</p>;
+  }
+
+  const { component: PageComponent, apiEndpoint } = pageData;
+  console.log(apiEndpoint);
   let data = [];
-  let servicesData = [];
 
   try {
-    // Fetch data based on the slug
-    const res = await fetch(`http://localhost:8000/api/${slug}`, {
-      cache: "no-store", // Ensures data is not cached
+    const res = await fetch(`${API_URL}/api${apiEndpoint}`, {
+      cache: "no-store",
     });
 
     if (res.ok) {
       data = await res.json();
     }
-
-    // If slug is "appointment", also fetch services data
-    if (slug === "appointment") {
-      const servicesRes = await fetch("http://localhost:8000/api/services", {
-        cache: "no-store", // Ensures data is not cached
-      });
-
-      if (servicesRes.ok) {
-        data = await servicesRes.json();
-      }
-      console.log(data);
-    }
   } catch (error) {
     console.error("Error fetching data:", error);
   }
-
+  console.log(apiEndpoint, data);
   return (
     <main className="flex-grow flex items-center justify-center">
-      {slug === "aboutus" && <AboutUs />}
-      {slug === "service" && <Service />}
-      {slug === "announcement" && <Announcement />}
-      {slug === "contactus" && <ContactUs />}
-      {slug === "proofoftransaction" && <ProofofTransaction />}
-      {slug === "appointment" && <Appointment data={data} />}
+      <PageComponent data={data} />
     </main>
   );
-};
-
-export default Page;
+}
