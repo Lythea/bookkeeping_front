@@ -31,7 +31,6 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
 
     setIsLoading(true);
     setErrorMessage(""); // Reset error message before making the request
-    console.log("Login attempt with email:", email);
 
     try {
       const response = await fetch(`${API_URL}/api/login`, {
@@ -43,10 +42,11 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
           email: email,
           password: password,
         }),
+        credentials: "include", // Ensure cookies are included in cross-origin requests
       });
 
       const data = await response.json();
-      console.log("Login response:", data); // Log API response
+      console.log("Login response:", data);
 
       if (response.ok) {
         // If login is successful, set the authentication token in cookies
@@ -68,7 +68,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
           data.message ||
             "Login failed. Please check your credentials and try again."
         );
-        console.error("Login error:", data); // Log error details
+        console.error("Login error:", data);
       }
     } catch (error) {
       setIsLoading(false);
