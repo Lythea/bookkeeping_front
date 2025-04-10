@@ -81,19 +81,39 @@ export const addTransactionThunk = createAsyncThunk(
 
       if (!response.ok) {
         const errorText = await response.text();
-        console.error("Failed to add transaction:", errorText);
-        throw new Error(errorText);
+        const errorStatus = response.status;
+        const errorDetails = {
+          status: errorStatus,
+          message: errorText,
+          url: API_URL,
+          requestPayload: transaction, // Optional: Include the request payload for debugging
+        };
+
+        console.error("Failed to add transaction:", errorDetails);
+        throw new Error(`Error ${errorStatus}: ${errorText}`);
       }
 
       const data = await response.json();
       showToast("Transaction added successfully!", "success");
       return data;
     } catch (error) {
+      // Detailed error logging
+      const detailedError = {
+        message: error.message || "Unknown error",
+        stack: error.stack,
+        time: new Date().toISOString(),
+        transaction,
+        apiUrl: API_URL,
+      };
+
+      console.error("Transaction error details:", detailedError);
+
       showToast("Failed to add transaction", "error");
       return rejectWithValue(error.message || "Failed to add transaction");
     }
   }
 );
+
 
 // 🔁 4. Update Transaction
 export const updateTransactionThunk = createAsyncThunk(
