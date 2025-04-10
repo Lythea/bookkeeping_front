@@ -71,6 +71,7 @@ export const getTransactionThunk = createAsyncThunk(
 export const addTransactionThunk = createAsyncThunk(
   "transactions/add",
   async (transaction: Transaction, { rejectWithValue }) => {
+    console.log(API_URL)
     try {
       const response = await fetch(API_URL, {
         method: "POST",
