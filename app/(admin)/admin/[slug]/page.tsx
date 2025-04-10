@@ -7,6 +7,8 @@ import Announcement from "@/components/admin/pages/announcements";
 import ProofofTransaction from "@/components/admin/pages/proofoftransactions";
 import DataLogger from "@/components/datalogger"; // New client component
 
+import { cookies } from "next/headers"; // Import cookies API from Next.js
+
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 type AdminPageData = {
@@ -18,16 +20,14 @@ type AdminPageData = {
 };
 
 export default async function AdminPage({
-  params,
+  params, // Params will be passed in the URL
 }: {
   params?: { slug?: string };
 }) {
-  // Ensure params are awaited before using its properties
   if (!params || !params.slug) {
     return <p className="text-center mt-10 text-gray-500">Page not found</p>;
   }
 
-  // Type assertion
   const { slug }: { slug?: string } = params as any;
 
   // Define the mapping of slug to components and prop keys
@@ -38,14 +38,13 @@ export default async function AdminPage({
       transactions: { component: Transaction, propKey: "transactions" },
       taxcalendar: { component: TaxCalendar, propKey: "events" },
       dashboard: { component: Dashboard, propKey: "stats" },
-      announcements: { component: Announcement, propKey: "announcements" }, // Added Announcement
+      announcements: { component: Announcement, propKey: "announcements" },
       proofoftransactions: {
         component: ProofofTransaction,
         propKey: "proofOfTransactions",
-      }, // Added ProofofTransaction
+      },
     };
 
-  // Check if the pageData exists for the given slug
   const pageData = slug ? pageMap[slug] : undefined;
 
   if (!pageData) {
@@ -54,18 +53,31 @@ export default async function AdminPage({
 
   const { component: PageComponent, propKey } = pageData;
 
-  // Define the API endpoints based on the slug
-  let data: AdminPageData = {}; // Now we use the object type
+  // Access cookies on the server side using the `cookies()` function
+  const cookieStore = cookies();
+  const token = (await cookieStore).get("authToken");
+
+  if (!token) {
+    return <p className="text-center mt-10 text-gray-500">Unauthorized</p>;
+  }
+
+  let data: AdminPageData = {};
   let dashboardData = [];
   let taxformData = [];
 
   try {
     if (slug === "dashboard") {
-      // Fetch both dashboard and taxform data if the slug is "dashboard"
       const dashboardRes = await fetch(`${API_URL}/api/dashboard`, {
+        headers: {
+          Authorization: `Bearer ${token.value}`, // Include token in headers
+        },
         cache: "no-store",
       });
+
       const taxformRes = await fetch(`${API_URL}/api/taxcalendar`, {
+        headers: {
+          Authorization: `Bearer ${token.value}`, // Include token in headers
+        },
         cache: "no-store",
       });
 
@@ -77,25 +89,23 @@ export default async function AdminPage({
         taxformData = await taxformRes.json();
       }
 
-      // Combine both sets of data if necessary
       data = { dashboard: dashboardData, taxform: taxformData };
     } else {
-      // Fetch data for other slugs
       const res = await fetch(`${API_URL}/api/${slug}`, {
+        headers: {
+          Authorization: `Bearer ${token.value}`, // Include token in headers
+        },
         cache: "no-store",
       });
 
       if (res.ok) {
         data = await res.json();
       }
-      console.log(data);
     }
   } catch (error) {
     console.error("Fetch error:", error);
   }
-
-  console.log(slug, data, propKey);
-
+  console.log(slug, token, data);
   return (
     <>
       <DataLogger data={data} />

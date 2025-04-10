@@ -160,14 +160,6 @@ const TaxCalendarLayout: React.FC<TaxCalendarProps> = ({ events }) => {
           >
             Add Tax Calendar
           </button>
-
-          <button className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
-            Export PDF
-          </button>
-
-          <button className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
-            Export Excel
-          </button>
         </div>
       </div>
 

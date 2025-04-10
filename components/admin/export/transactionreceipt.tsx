@@ -56,7 +56,6 @@ const generateReceiptPDF = (transaction: Transaction) => {
 
   y += 0.2;
   doc.text(`Address: ${transaction.address}`, 2.25, y);
-
   doc.text(`Email: ${transaction.email}`, 0.25, y);
 
   y += 0.2;
@@ -77,13 +76,12 @@ const generateReceiptPDF = (transaction: Transaction) => {
 
   transaction.inquiries.forEach((inq, index) => {
     doc.setFontSize(10);
-    doc.text(`Inquiry #${index + 1}`, 0.25, y);
+    doc.text(`${inq.service}`, 0.25, y);
     y += 0.15;
-    doc.text(`Name: ${inq.name}`, 0.35, y);
-    y += 0.15;
-    doc.text(`Service: ${inq.service}`, 0.35, y);
-    y += 0.15;
-    doc.text(`Price: Php ${parseFloat(inq.price).toLocaleString()}`, 0.35, y);
+    doc.text(`${inq.name} `, 0.35, y); // Adding right arrow after name
+
+    // Price inline with the name
+    doc.text(`Price: Php ${parseFloat(inq.price).toLocaleString()}`, 3.1, y);
     y += 0.25; // space between inquiries
   });
 

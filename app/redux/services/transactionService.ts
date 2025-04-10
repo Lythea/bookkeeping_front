@@ -1,7 +1,21 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import { showToast } from "@/components/toast";
+import Cookies from "universal-cookie";
+const cookies = new Cookies();
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL + "/api/transactions";
+
+// Function to get the Authorization headers with the token
+const getAuthHeaders = () => {
+  const token = cookies.get("authToken");
+  if (!token) {
+    throw new Error("User is not authenticated");
+  }
+  return {
+    "Content-Type": "application/json",
+    Authorization: `Bearer ${token}`,
+  };
+};
 
 // Transaction interface
 interface Transaction {
@@ -22,7 +36,9 @@ export const fetchTransactionsThunk = createAsyncThunk(
   "transactions/fetchAll",
   async (_, { rejectWithValue }) => {
     try {
-      const response = await fetch(API_URL);
+      const response = await fetch(API_URL, {
+        headers: getAuthHeaders(),
+      });
       if (!response.ok) throw new Error("Failed to fetch transactions");
       return await response.json();
     } catch (error) {
@@ -37,7 +53,9 @@ export const getTransactionThunk = createAsyncThunk(
   "transactions/fetchOne",
   async (id: number, { rejectWithValue }) => {
     try {
-      const response = await fetch(`${API_URL}/${id}`);
+      const response = await fetch(`${API_URL}/${id}`, {
+        headers: getAuthHeaders(),
+      });
       if (!response.ok) throw new Error("Failed to fetch transaction");
       return await response.json();
     } catch (error) {
@@ -52,11 +70,9 @@ export const addTransactionThunk = createAsyncThunk(
   "transactions/add",
   async (transaction: Transaction, { rejectWithValue }) => {
     try {
-      console.log("🚀 Data being sent:", transaction);
-
       const response = await fetch(API_URL, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: getAuthHeaders(),
         body: JSON.stringify(transaction),
       });
 
@@ -67,7 +83,6 @@ export const addTransactionThunk = createAsyncThunk(
       }
 
       const data = await response.json();
-      console.log("✅ Server Response:", data);
       showToast("Transaction added successfully!", "success");
       return data;
     } catch (error) {
@@ -84,7 +99,7 @@ export const updateTransactionThunk = createAsyncThunk(
     try {
       const response = await fetch(`${API_URL}/${transaction.id}`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        headers: getAuthHeaders(),
         body: JSON.stringify(transaction),
       });
 
@@ -106,6 +121,7 @@ export const deleteTransactionThunk = createAsyncThunk(
     try {
       const response = await fetch(`${API_URL}/${id}`, {
         method: "DELETE",
+        headers: getAuthHeaders(),
       });
 
       if (!response.ok) throw new Error("Failed to delete transaction");
@@ -126,7 +142,7 @@ export const updateStatusThunk = createAsyncThunk(
     try {
       const response = await fetch(`${API_URL}/updateStatus/${id}`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        headers: getAuthHeaders(),
         body: JSON.stringify({ status }),
       });
 
@@ -146,7 +162,7 @@ export const updateTransactThunk = createAsyncThunk(
     try {
       const response = await fetch(`${API_URL}/updateTransact/${id}`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        headers: getAuthHeaders(),
         body: JSON.stringify({ transact }),
       });
 
@@ -157,7 +173,6 @@ export const updateTransactThunk = createAsyncThunk(
       return rejectWithValue(error); // Return the error if it fails
     }
   }
-  
 );
 
 // 🔁 6. Filter Transactions
@@ -175,7 +190,9 @@ export const filterTransactionsThunk = createAsyncThunk<
       console.log("🔍 Filter Query Params:", filters);
       console.log("🌐 Full URL:", fullUrl);
 
-      const response = await fetch(fullUrl);
+      const response = await fetch(fullUrl, {
+        headers: getAuthHeaders(),
+      });
 
       console.log("📥 Raw Response Status:", response.status);
 
