@@ -1,4 +1,5 @@
 "use client";
+
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import DataTable from "react-data-table-component";
@@ -6,7 +7,7 @@ import { CSVLink } from "react-csv";
 import { HiDotsVertical } from "react-icons/hi";
 import AddClientModal from "@/components/admin/modal/client/AddClient";
 import EditClientModal from "@/components/admin/modal/client/EditClient";
-import { deleteClientThunk } from "@/app/redux/slice/clientSlice"; // Import actions
+import { deleteClientThunk } from "@/app/redux/slice/clientSlice";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch } from "@/app/redux/store";
 
@@ -20,9 +21,13 @@ interface Client {
   tin_id: string;
 }
 
-export default function ClientLayout({ clients = [] }: { clients?: Client[] }) {
+interface ClientPropType {
+  clients?: Client[] | { data: Client[] };
+}
+
+export default function ClientLayout({ clients }: ClientPropType) {
   const dispatch = useDispatch<AppDispatch>();
-  const router = useRouter(); // To trigger page refresh when necessary
+  const router = useRouter();
 
   const [menuOpen, setMenuOpen] = useState<number | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
@@ -49,11 +54,8 @@ export default function ClientLayout({ clients = [] }: { clients?: Client[] }) {
   const confirmDeleteClient = async () => {
     if (clientToDelete) {
       try {
-        // Dispatch the delete action
         await dispatch(deleteClientThunk(clientToDelete.id));
-
-        // After deleting, trigger a page refresh to re-fetch the data
-        router.refresh(); // This will refresh the page to fetch updated data from the server
+        router.refresh();
         setIsDeleteModalOpen(false);
         setClientToDelete(null);
       } catch (error) {
@@ -62,18 +64,22 @@ export default function ClientLayout({ clients = [] }: { clients?: Client[] }) {
     }
   };
 
-  const filteredData =
-    clients?.filter((item) => {
-      const query = searchQuery.toLowerCase();
-      return (
-        item.name?.toLowerCase().includes(query) ||
-        item.phone?.toLowerCase().includes(query) ||
-        item.address?.toLowerCase().includes(query) ||
-        item.business_type?.toLowerCase().includes(query) ||
-        item.business_name?.toLowerCase().includes(query) ||
-        item.tin_id?.toLowerCase().includes(query)
-      );
-    }) || [];
+  // Ensure clients is always an array
+  const clientArray: Client[] = Array.isArray(clients)
+    ? clients
+    : (clients as any)?.data ?? [];
+
+  const filteredData = clientArray.filter((item) => {
+    const query = searchQuery.toLowerCase();
+    return (
+      item.name?.toLowerCase().includes(query) ||
+      item.phone?.toLowerCase().includes(query) ||
+      item.address?.toLowerCase().includes(query) ||
+      item.business_type?.toLowerCase().includes(query) ||
+      item.business_name?.toLowerCase().includes(query) ||
+      item.tin_id?.toLowerCase().includes(query)
+    );
+  });
 
   const columns = [
     { name: "Name", selector: (row: Client) => row.name, sortable: true },
@@ -139,13 +145,6 @@ export default function ClientLayout({ clients = [] }: { clients?: Client[] }) {
           >
             Add Client
           </button>
-          <CSVLink
-            data={filteredData}
-            filename="client-list.csv"
-            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-          >
-            Export Excel
-          </CSVLink>
         </div>
       </div>
       <DataTable

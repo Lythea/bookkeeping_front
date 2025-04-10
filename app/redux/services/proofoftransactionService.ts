@@ -1,6 +1,19 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL + "/api/proofoftransactions"; // Use the environment variable
+import Cookies from "universal-cookie";
+import { showToast } from "@/components/toast";
 
-import { showToast } from "@/components/toast"; // Import toast
+const cookies = new Cookies();
+const API_URL = process.env.NEXT_PUBLIC_API_URL + "/api/proofoftransactions";
+
+const getAuthHeaders = () => {
+  const token = cookies.get("authToken");
+  if (!token) {
+    throw new Error("User is not authenticated");
+  }
+  return {
+    "Content-Type": "application/json",
+    Authorization: `Bearer ${token}`,
+  };
+};
 
 interface ProofOfTransaction {
   id: number;
@@ -12,7 +25,7 @@ interface ProofOfTransaction {
 
 export const fetchProofOfTransactions = async () => {
   try {
-    const response = await fetch(API_URL);
+    const response = await fetch(API_URL); // Public route (no auth needed)
     if (!response.ok) throw new Error("Failed to fetch proof of transactions");
     return response.json();
   } catch (error) {
@@ -23,7 +36,9 @@ export const fetchProofOfTransactions = async () => {
 
 export const getProofOfTransaction = async (id: number) => {
   try {
-    const response = await fetch(`${API_URL}/${id}`);
+    const response = await fetch(`${API_URL}/${id}`, {
+      headers: getAuthHeaders(),
+    });
     if (!response.ok) throw new Error("Failed to fetch proof of transaction");
     return response.json();
   } catch (error) {
@@ -38,7 +53,7 @@ export const addProofOfTransaction = async (proofOfTransaction: Omit<ProofOfTran
 
     const response = await fetch(API_URL, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: getAuthHeaders(),
       body: JSON.stringify(proofOfTransaction),
     });
 
@@ -62,7 +77,7 @@ export const updateProofOfTransaction = async (proofOfTransaction: ProofOfTransa
   try {
     const response = await fetch(`${API_URL}/${proofOfTransaction.id}`, {
       method: "PUT",
-      headers: { "Content-Type": "application/json" },
+      headers: getAuthHeaders(),
       body: JSON.stringify(proofOfTransaction),
     });
 
@@ -80,12 +95,13 @@ export const deleteProofOfTransaction = async (id: number) => {
   try {
     const response = await fetch(`${API_URL}/${id}`, {
       method: "DELETE",
+      headers: getAuthHeaders(),
     });
 
     if (!response.ok) throw new Error("Failed to delete proof of transaction");
 
     showToast("Proof of transaction deleted successfully!", "success");
-    return id; // Returning the ID for potential state updates
+    return id;
   } catch (error) {
     showToast("Failed to delete proof of transaction", "error");
     throw error;

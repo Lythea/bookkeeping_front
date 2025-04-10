@@ -1,22 +1,25 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL + "/api/services";
-import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
+import { createAsyncThunk } from "@reduxjs/toolkit";
 import { showToast } from "@/components/toast";
+import Cookies from "universal-cookie";
+const cookies = new Cookies();
+const getAuthHeaders = () => {
+  const token = cookies.get("authToken");
+  if (!token) {
+    throw new Error("User is not authenticated");
+  }
+  return {
+    "Content-Type": "application/json",
+    Authorization: `Bearer ${token}`,
+  };
+};
 
-interface Form {
-  name: string;
-  file: string;
-  price: string;
-  description: string;
-}
+const API_URL = process.env.NEXT_PUBLIC_API_URL + "/api/services";
 
-interface Service {
-  id: number;
-  service: string;
-  forms: Form[];
-}
 export const fetchServicesThunk = createAsyncThunk("services/fetch", async () => {
   try {
-    const response = await fetch(API_URL);
+    const response = await fetch(API_URL, {
+      headers: getAuthHeaders(),
+    });
     if (!response.ok) throw new Error("Failed to fetch services");
     return response.json();
   } catch (error) {
@@ -28,7 +31,9 @@ export const fetchServicesThunk = createAsyncThunk("services/fetch", async () =>
 // Fetch a single service
 export const getServiceThunk = createAsyncThunk("services/get", async (id: number) => {
   try {
-    const response = await fetch(`${API_URL}/${id}`);
+    const response = await fetch(`${API_URL}/${id}`, {
+      headers: getAuthHeaders(),
+    });
     if (!response.ok) throw new Error("Failed to fetch service");
     return response.json();
   } catch (error) {
@@ -42,19 +47,9 @@ export const addServiceThunk = createAsyncThunk(
   "services/add",
   async (formData: FormData, { rejectWithValue }) => {
     try {
-      // Log formData entries to see what data is being sent
-      formData.forEach((value, key) => {
-        if (value instanceof File) {
-          // If it's a file, log the file's name, size, and type
-          console.log(`${key}: File - Name: ${value.name}, Size: ${value.size} bytes, Type: ${value.type}`);
-        } else {  
-          // Otherwise, just log the value directly
-          console.log(`${key}: ${value}`);
-        }
-      });
-      console.log(API_URL)
       const response = await fetch(API_URL, {
         method: "POST",
+        headers: getAuthHeaders(),
         body: formData, // FormData for file upload support
       });
 
@@ -67,18 +62,12 @@ export const addServiceThunk = createAsyncThunk(
     }
   }
 );
+
 export const updateServiceThunk = createAsyncThunk("services/update", async (service: any) => {
   try {
-    console.log("Data being sent to the API:", service);
-
-    // Log the FormData contents
-    console.log("FormData contents before dispatch:");
-    for (let pair of service.entries()) {
-      console.log(`${pair[0]}:`, pair[1]);
-    }
-
     const response = await fetch(`${API_URL}/${service.get("service_id")}`, {
       method: "POST",
+      headers: getAuthHeaders(),
       body: service, // Send FormData directly
     });
 
@@ -93,12 +82,12 @@ export const updateServiceThunk = createAsyncThunk("services/update", async (ser
   }
 });
 
-
 // Delete a service
 export const deleteServiceThunk = createAsyncThunk("services/delete", async (id: number) => {
   try {
     const response = await fetch(`${API_URL}/${id}`, {
       method: "DELETE",
+      headers: getAuthHeaders(),
     });
     if (!response.ok) throw new Error("Failed to delete service");
     showToast("Service deleted successfully!", "success");
@@ -108,6 +97,7 @@ export const deleteServiceThunk = createAsyncThunk("services/delete", async (id:
     throw error;
   }
 });
+
 // Thunk to delete a form from a service
 export const deleteFormThunk = createAsyncThunk(
   "services/deleteForm",
@@ -115,15 +105,13 @@ export const deleteFormThunk = createAsyncThunk(
     { serviceId, formIndex }: { serviceId: number; formIndex: number },
     { rejectWithValue }
   ) => {
-    console.log("deleteFormThunk triggered", { serviceId, formIndex }); // Log the serviceId and formIndex
-
-  
+    try {
       const response = await fetch(`${API_URL}/${serviceId}/forms/${formIndex}`, {
         method: "DELETE",
+        headers: getAuthHeaders(),
       });
 
       if (!response.ok) {
-        console.error("Failed to delete form, response not ok", response);
         throw new Error("Failed to delete form");
       }
 
@@ -134,9 +122,14 @@ export const deleteFormThunk = createAsyncThunk(
       // Return the service ID and form index for removing the form from the state
       return { serviceId, formIndex };
 
+    } catch (error) {
+      console.error("Error in deleteFormThunk:", error);
+      showToast("Failed to delete form", "error");
+      return rejectWithValue(error instanceof Error ? error.message : "Unknown error");
+    }
   }
-  
 );
+
 export const updateServiceNameThunk = createAsyncThunk(
   "services/updateServiceName",
   async ({ serviceId, serviceName }: { serviceId: number; serviceName: string }, { rejectWithValue }) => {
@@ -145,6 +138,7 @@ export const updateServiceNameThunk = createAsyncThunk(
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
+          ...getAuthHeaders(), // Add Authorization headers
         },
         body: JSON.stringify({ service: serviceName }),
       });
@@ -168,6 +162,7 @@ export const deleteServiceWithFormsThunk = createAsyncThunk(
     try {
       const response = await fetch(`${API_URL}/${serviceId}`, {
         method: "DELETE",
+        headers: getAuthHeaders(),
       });
 
       if (!response.ok) throw new Error("Failed to delete service");
@@ -181,4 +176,3 @@ export const deleteServiceWithFormsThunk = createAsyncThunk(
     }
   }
 );
-
