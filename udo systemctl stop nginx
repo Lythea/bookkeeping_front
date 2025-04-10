@@ -1,0 +1,19 @@
+[0;1;31m×[0m caddy.service - Caddy
+     Loaded: loaded (/lib/systemd/system/caddy.service; enabled; vendor preset: enabled)
+     Active: [0;1;31mfailed[0m (Result: exit-code) since Wed 2025-04-09 07:59:49 UTC; 15s ago
+       Docs: https://caddyserver.com/docs/
+    Process: 18047 ExecStart=/usr/bin/caddy run --environ --config /etc/caddy/Caddyfile [0;1;31m(code=exited, status=1/FAILURE)[0m
+   Main PID: 18047 (code=exited, status=1/FAILURE)
+     Status: "loading new config: http app module: start: listening on :80: listen tcp :80: bind: address already in use"
+        CPU: 55ms
+
+Apr 09 07:59:49 srv786031 caddy[18047]: JOURNAL_STREAM=8:117228
+Apr 09 07:59:49 srv786031 caddy[18047]: SYSTEMD_EXEC_PID=18047
+Apr 09 07:59:49 srv786031 caddy[18047]: {"level":"info","ts":1744185589.796964,"msg":"using config from file","file":"/etc/caddy/Caddyfile"}
+Apr 09 07:59:49 srv786031 caddy[18047]: {"level":"info","ts":1744185589.7980516,"msg":"adapted config to JSON","adapter":"caddyfile"}
+Apr 09 07:59:49 srv786031 caddy[18047]: {"level":"info","ts":1744185589.7993999,"logger":"admin","msg":"admin endpoint started","address":"localhost:2019","enforce_origin":false,"origins":["//localhost:2019","//[::1]:2019","//127.0.0.1:2019"]}
+Apr 09 07:59:49 srv786031 caddy[18047]: {"level":"warn","ts":1744185589.7997131,"logger":"http.auto_https","msg":"server is listening only on the HTTP port, so no automatic HTTPS will be applied to this server","server_name":"srv0","http_port":80}
+Apr 09 07:59:49 srv786031 caddy[18047]: Error: loading initial config: loading new config: http app module: start: listening on :80: listen tcp :80: bind: address already in use
+Apr 09 07:59:49 srv786031 systemd[1]: [0;1;39m[0;1;31m[0;1;39mcaddy.service: Main process exited, code=exited, status=1/FAILURE[0m
+Apr 09 07:59:49 srv786031 systemd[1]: [0;1;38;5;185m[0;1;39m[0;1;38;5;185mcaddy.service: Failed with result 'exit-code'.[0m
+Apr 09 07:59:49 srv786031 systemd[1]: [0;1;31m[0;1;39m[0;1;31mFailed to start Caddy.[0m

@@ -1,0 +1,21 @@
+[0;1;32m●[0m caddy.service - Caddy
+     Loaded: loaded (/lib/systemd/system/caddy.service; enabled; vendor preset: enabled)
+     Active: [0;1;32mactive (running)[0m since Wed 2025-04-09 08:12:02 UTC; 40s ago
+       Docs: https://caddyserver.com/docs/
+   Main PID: 18862 (caddy)
+      Tasks: 8 (limit: 4646)
+     Memory: 11.8M
+        CPU: 178ms
+     CGroup: /system.slice/caddy.service
+             └─18862 /usr/bin/caddy run --environ --config /etc/caddy/Caddyfile
+
+Apr 09 08:12:15 srv786031 caddy[18862]: {"level":"info","ts":1744186335.0507984,"msg":"trying to solve challenge","identifier":"rnkservices1.shop","challenge_type":"http-01","ca":"https://acme.zerossl.com/v2/DV90"}
+Apr 09 08:12:17 srv786031 caddy[18862]: {"level":"info","ts":1744186337.242449,"logger":"tls.issuance.acme","msg":"served key authentication","identifier":"rnkservices1.shop","challenge":"http-01","remote":"91.199.212.132:57808","distributed":false}
+Apr 09 08:12:17 srv786031 caddy[18862]: {"level":"info","ts":1744186337.8873444,"logger":"tls.issuance.acme","msg":"served key authentication","identifier":"rnkservices1.shop","challenge":"http-01","remote":"35.234.83.163:10752","distributed":false}
+Apr 09 08:12:17 srv786031 caddy[18862]: {"level":"info","ts":1744186337.9736788,"logger":"tls.issuance.acme","msg":"served key authentication","identifier":"rnkservices1.shop","challenge":"http-01","remote":"35.209.173.94:2048","distributed":false}
+Apr 09 08:12:24 srv786031 caddy[18862]: {"level":"info","ts":1744186344.1231475,"msg":"authorization finalized","identifier":"rnkservices1.shop","authz_status":"valid"}
+Apr 09 08:12:24 srv786031 caddy[18862]: {"level":"info","ts":1744186344.1240644,"msg":"validations succeeded; finalizing order","order":"https://acme.zerossl.com/v2/DV90/order/S02RjS8KCA6Cvh55mN3oSg"}
+Apr 09 08:12:42 srv786031 caddy[18862]: {"level":"info","ts":1744186362.128612,"msg":"got renewal info","names":["rnkservices1.shop"],"window_start":1750723199,"window_end":1750895999,"selected_time":1750874053,"recheck_after":1744207962.128603,"explanation_url":""}
+Apr 09 08:12:42 srv786031 caddy[18862]: {"level":"info","ts":1744186362.1293263,"msg":"successfully downloaded available certificate chains","count":1,"first_url":"https://acme.zerossl.com/v2/DV90/cert/xK4tIcuFTc4rluL7C5RWuw"}
+Apr 09 08:12:42 srv786031 caddy[18862]: {"level":"info","ts":1744186362.1328835,"logger":"tls.obtain","msg":"certificate obtained successfully","identifier":"rnkservices1.shop","issuer":"acme.zerossl.com-v2-DV90"}
+Apr 09 08:12:42 srv786031 caddy[18862]: {"level":"info","ts":1744186362.133168,"logger":"tls.obtain","msg":"releasing lock","identifier":"rnkservices1.shop"}
