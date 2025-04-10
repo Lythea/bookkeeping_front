@@ -1,10 +1,9 @@
-// components/auth/login.tsx
 import React, { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import Cookies from "universal-cookie";
-import { useRouter } from "next/navigation";
-import { AiOutlineEye, AiOutlineEyeInvisible } from "react-icons/ai"; // Import eye icons
+import { useRouter } from "next/router";
+import { AiOutlineEye, AiOutlineEyeInvisible } from "react-icons/ai";
 
 interface LoginModalProps {
   isOpen: boolean;
@@ -20,7 +19,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
   const [password, setPassword] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [showPassword, setShowPassword] = useState(false); // State to toggle password visibility
+  const [showPassword, setShowPassword] = useState(false);
 
   const cookies = new Cookies();
   const router = useRouter();
@@ -47,6 +46,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
       });
 
       const data = await response.json();
+      console.log("Login response:", data); // Log API response
 
       if (response.ok) {
         // If login is successful, set the authentication token in cookies
@@ -61,26 +61,23 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
         onClose(); // Close the login modal
         router.push("/admin"); // Redirect to the admin page
       } else {
-        // In case of unsuccessful login, show the error message from the server
         setIsLoading(false);
         setErrorMessage(
           data.message ||
             "Login failed. Please check your credentials and try again."
         );
-        console.error("Login error:", data); // Log the error details for debugging
+        console.error("Login error:", data); // Log error details
       }
     } catch (error) {
-      // In case of network or unexpected errors, handle them gracefully
       setIsLoading(false);
 
+      // More granular error handling
       if (error instanceof Error) {
-        // If the error is a standard JavaScript Error, log the message and stack trace
         setErrorMessage(`An error occurred: ${error.message}`);
-        console.error("Error details:", error.stack); // Log stack trace for debugging
+        console.error("Error details:", error.stack);
       } else {
-        // If it's a non-standard error (e.g., a response error object), provide a generic message
         setErrorMessage("An error occurred. Please try again later.");
-        console.error("Unknown error:", error); // Log the error details for debugging
+        console.error("Unknown error:", error);
       }
     }
   };
@@ -122,7 +119,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
           </div>
           <div className="relative">
             <input
-              type={showPassword ? "text" : "password"} // Toggle between text and password
+              type={showPassword ? "text" : "password"}
               placeholder="Password"
               className="w-full p-3 border border-gray-300 text-black rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               value={password}

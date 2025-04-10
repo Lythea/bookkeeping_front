@@ -34,7 +34,6 @@ interface TransactionState {
   reload: boolean;
 }
 
-
 const initialState: TransactionState = {
   transactions: [],
   transaction: null,
@@ -43,6 +42,7 @@ const initialState: TransactionState = {
   error: null,
   reload: false,
 };
+
 const transactionSlice = createSlice({
   name: "transactions",
   initialState,
@@ -120,7 +120,10 @@ const transactionSlice = createSlice({
       // ❗ Error
       .addMatcher((action) => action.type.endsWith("/rejected"), (state, action) => {
         state.loading = false;
-        
+        // Set a serializable error message
+        const errorMessage =  "An unexpected error occurred";
+        state.error = errorMessage;
+  
       });
   },
 });

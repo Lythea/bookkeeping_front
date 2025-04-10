@@ -43,7 +43,7 @@ export const fetchTransactionsThunk = createAsyncThunk(
       return await response.json();
     } catch (error) {
       showToast("Failed to fetch transactions", "error");
-      return rejectWithValue(error);
+      return rejectWithValue(error.message || 'An unexpected error occurred');
     }
   }
 );
@@ -60,7 +60,7 @@ export const getTransactionThunk = createAsyncThunk(
       return await response.json();
     } catch (error) {
       showToast("Failed to fetch transaction", "error");
-      return rejectWithValue(error);
+      return rejectWithValue(error.message || 'An unexpected error occurred');
     }
   }
 );
@@ -87,7 +87,7 @@ export const addTransactionThunk = createAsyncThunk(
       return data;
     } catch (error) {
       showToast("Failed to add transaction", "error");
-      return rejectWithValue(error);
+      return rejectWithValue(error.message || "Failed to add transaction");
     }
   }
 );
@@ -109,7 +109,7 @@ export const updateTransactionThunk = createAsyncThunk(
       return await response.json();
     } catch (error) {
       showToast("Failed to update transaction", "error");
-      return rejectWithValue(error);
+      return rejectWithValue(error.message || "Failed to update transaction");
     }
   }
 );
@@ -130,7 +130,7 @@ export const deleteTransactionThunk = createAsyncThunk(
       return id;
     } catch (error) {
       showToast("Failed to delete transaction", "error");
-      return rejectWithValue(error);
+      return rejectWithValue(error.message || "Failed to delete transaction");
     }
   }
 );
@@ -150,7 +150,7 @@ export const updateStatusThunk = createAsyncThunk(
 
       return await response.json(); // Return the updated data
     } catch (error) {
-      return rejectWithValue(error); // Return the error if it fails
+      return rejectWithValue(error.message || "Failed to update status"); // Return the error message if it fails
     }
   }
 );
@@ -170,7 +170,7 @@ export const updateTransactThunk = createAsyncThunk(
 
       return await response.json(); // Return the updated data
     } catch (error) {
-      return rejectWithValue(error); // Return the error if it fails
+      return rejectWithValue(error.message || "Failed to update transact"); // Return the error message if it fails
     }
   }
 );
@@ -186,7 +186,7 @@ export const filterTransactionsThunk = createAsyncThunk<
     try {
       const queryParams = new URLSearchParams(filters as any).toString();
       const fullUrl = `${API_URL}/filter?${queryParams}`;
-      
+
       console.log("🔍 Filter Query Params:", filters);
       console.log("🌐 Full URL:", fullUrl);
 
@@ -206,7 +206,7 @@ export const filterTransactionsThunk = createAsyncThunk<
       const errorMessage = error?.message || "Unknown error";
       console.error("❌ Filter Error:", errorMessage);
       showToast(errorMessage, "error");
-      return rejectWithValue(errorMessage);
+      return rejectWithValue(errorMessage); // Return the error message as the payload
     }
   }
 );
