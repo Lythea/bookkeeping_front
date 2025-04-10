@@ -31,7 +31,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
 
     setIsLoading(true);
     setErrorMessage(""); // Reset error message before making the request
-
+    console.log(API_URL);
     try {
       const response = await fetch(`${API_URL}/api/login`, {
         method: "POST",
