@@ -6,16 +6,22 @@ const cookies = new Cookies();
 const API_URL = process.env.NEXT_PUBLIC_API_URL + "/api/transactions";
 
 // Function to get the Authorization headers with the token
-const getAuthHeaders = () => {
-  const token = cookies.get("authToken");
-  if (!token) {
-    throw new Error("User is not authenticated");
+const getAuthHeaders = (requiresAuth = true) => {
+  if (requiresAuth) {
+    const token = cookies.get("authToken");
+    if (!token) {
+      throw new Error("User is not authenticated");
+    }
+    return {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    };
   }
   return {
     "Content-Type": "application/json",
-    Authorization: `Bearer ${token}`,
   };
 };
+
 
 // Transaction interface
 interface Transaction {
@@ -66,8 +72,6 @@ export const getTransactionThunk = createAsyncThunk(
     }
   }
 );
-
-// 🔁 3. Add Transaction
 export const addTransactionThunk = createAsyncThunk(
   "transactions/add",
   async (transaction: Transaction, { rejectWithValue }) => {
@@ -75,7 +79,7 @@ export const addTransactionThunk = createAsyncThunk(
     try {
       const response = await fetch(API_URL, {
         method: "POST",
-        headers: getAuthHeaders(),
+        headers: getAuthHeaders(false),  // Passing false, meaning no token is required
         body: JSON.stringify(transaction),
         credentials: "include", // Include cookies in the request
       });
