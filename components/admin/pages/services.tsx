@@ -86,9 +86,6 @@ const ServiceLayout: React.FC<ServiceLayoutProps> = ({ services }) => {
   };
 
   const handleEditService = (serviceId: number, serviceName: string) => {
-    console.log(
-      `Edit service with id: ${serviceId} and service name: ${serviceName}`
-    );
     setMainServicetoEdit({ serviceId, serviceName });
     setIsEditServicePopupOpen(true);
   };
@@ -104,7 +101,7 @@ const ServiceLayout: React.FC<ServiceLayoutProps> = ({ services }) => {
     service_name: string
   ) => {
     const formDataWithService = { ...form, service_id, service_name }; // Add serviceId and serviceName to form data
-    console.log(formDataWithService);
+
     setServiceToEdit(formDataWithService); // Set the form with service info to be edited
     setIsEditModalOpen(true); // Open the edit modal
   };
@@ -194,11 +191,6 @@ const ServiceLayout: React.FC<ServiceLayoutProps> = ({ services }) => {
     setIsEditServicePopupOpen(false); // Close the popup after saving
   };
 
-  const exportToPDF = () => {};
-
-  // Export to Excel
-  const exportToExcel = () => {};
-
   return (
     <div className="p-6 bg-white shadow-md rounded-md">
       <h2 className="text-2xl font-semibold mb-4">Service List</h2>
@@ -219,20 +211,6 @@ const ServiceLayout: React.FC<ServiceLayoutProps> = ({ services }) => {
             className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
           >
             Add Service
-          </button>
-
-          <button
-            onClick={exportToPDF}
-            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-          >
-            Export PDF
-          </button>
-
-          <button
-            onClick={exportToExcel}
-            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-          >
-            Export Excel
           </button>
         </div>
       </div>
@@ -299,12 +277,7 @@ const ServiceLayout: React.FC<ServiceLayoutProps> = ({ services }) => {
                         target="_blank" // Ensure the file opens in a new tab
                         rel="noopener noreferrer"
                         className="text-blue-500 hover:underline text-md ml-2"
-                        onClick={() => {
-                          console.log(
-                            "File URL:",
-                            `${process.env.NEXT_PUBLIC_API_URL}/${form.file}`
-                          ); // Log the full URL when clicked
-                        }}
+                        onClick={() => {}}
                       >
                         {form.name}
                       </a>

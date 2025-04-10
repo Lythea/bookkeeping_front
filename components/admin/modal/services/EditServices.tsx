@@ -66,10 +66,7 @@ export default function EditServiceModal({
         formData.append(`forms[${index}][name]`, form.name);
 
         if (form.file && form.file instanceof File) {
-          console.log(`forms[${index}][file]:`, form.file); // Log the file object
-          console.log(`File name: ${form.file.name}`);
-          console.log(`File type: ${form.file.type}`);
-          console.log(`File size: ${form.file.size}`);
+ 
           formData.append(`forms[${index}][file]`, form.file);
         } else if (!form.file) {
           formData.append(`forms[${index}][file]`, "");
@@ -79,10 +76,7 @@ export default function EditServiceModal({
         formData.append(`forms[${index}][description]`, form.description);
       });
 
-      console.log("FormData contents before dispatch:");
-      for (let [key, value] of formData.entries()) {
-        console.log(`${key}: ${value}`);
-      }
+
 
       await dispatch(updateServiceThunk(formData)).unwrap();
       router.refresh();

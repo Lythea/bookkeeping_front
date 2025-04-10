@@ -105,7 +105,7 @@ export default async function AdminPage({
   } catch (error) {
     console.error("Fetch error:", error);
   }
-  console.log(slug, token, data);
+
   return (
     <>
       <DataLogger data={data} />

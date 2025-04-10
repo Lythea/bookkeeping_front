@@ -23,7 +23,6 @@ export default function ProofOfTransactionLayout({
 }: {
   proofOfTransactions?: ProofOfTransaction[];
 }) {
-  console.log(proofOfTransactions);
   const dispatch = useDispatch<AppDispatch>();
   const router = useRouter();
 

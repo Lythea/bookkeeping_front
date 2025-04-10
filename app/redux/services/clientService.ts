@@ -16,9 +16,7 @@ interface Client {
 const getAuthHeaders = () => {
   const token = cookies.get("authToken");
 
-  // Log the token to see what it contains
-  console.log("🚀 authToken:", token);
-  
+
   if (!token) {
     throw new Error("User is not authenticated");
   }
@@ -62,7 +60,6 @@ export const getClient = async (id: number) => {
 // Function to add a new client
 export const addClient = async (client: Omit<Client, "id">) => {
   try {
-    console.log("🚀 Data being sent:", client);
 
     const response = await fetch(API_URL, {
       method: "POST",
@@ -78,7 +75,7 @@ export const addClient = async (client: Omit<Client, "id">) => {
     }
 
     const data = await response.json();
-    console.log("✅ Server Response:", data);
+  
     showToast("Client added successfully!", "success");
     return data;
   } catch (error) {

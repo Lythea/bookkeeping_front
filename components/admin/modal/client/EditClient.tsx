@@ -51,8 +51,7 @@ export default function EditClientModal({
       resetForm,
     }: { setSubmitting: (isSubmitting: boolean) => void; resetForm: () => void }
   ) => {
-    console.log("🚀 Updating Client:", values);
-
+ 
     try {
       await dispatch(updateClientThunk(values)).unwrap();
       router.refresh();

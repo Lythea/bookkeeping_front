@@ -23,7 +23,7 @@ interface FormData {
   transact: string; // Ensure transact is defined in the form data as well
 }
 export default function Appointment({ data }: AppointmentProps) {
-  console.log(data);
+
   const dispatch = useDispatch<AppDispatch>();
 
   const [formData, setFormData] = useState<FormData>({

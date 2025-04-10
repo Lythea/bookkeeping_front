@@ -53,12 +53,11 @@ const HistoryInfo = ({ onClose, transactionNames }: HistoryInfoProps) => {
       filters.dateTo = today;
     }
 
-    console.log("Applied Filters:", filters);
 
     const action = await dispatch(filterTransactionsThunk(filters));
 
     if (filterTransactionsThunk.fulfilled.match(action)) {
-      console.log("Filtered Data:", action.payload);
+     
       setFilteredData(action.payload); // Set the filtered data
       setIsFiltered(true); // Mark that filter is applied
     } else {

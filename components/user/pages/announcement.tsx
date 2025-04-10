@@ -10,7 +10,6 @@ interface AnnouncementProps {
 }
 
 export default function Announcement({ data }: AnnouncementProps) {
-  console.log("Data passed to Announcement:", data); // Log the passed data
 
   const formatDate = (dateString: string) => {
     return new Intl.DateTimeFormat("en-US", {

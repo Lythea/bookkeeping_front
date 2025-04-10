@@ -31,7 +31,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
 
     setIsLoading(true);
     setErrorMessage(""); // Reset error message before making the request
-    console.log("Full API URL:", `${API_URL}/api/login`);
+
     try {
       const response = await fetch(`${API_URL}/api/login`, {
         method: "POST",
@@ -46,7 +46,6 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
       });
 
       const data = await response.json();
-      console.log("Login response:", data);
 
       if (response.ok) {
         // If login is successful, set the authentication token in cookies

@@ -49,7 +49,6 @@ export const getAnnouncement = async (id: number) => {
 
 export const addAnnouncement = async (announcement: Omit<Announcement, "id">) => {
   try {
-    console.log("🚀 Data being sent:", announcement);
 
     const response = await fetch(API_URL, {
       method: "POST",
@@ -65,7 +64,7 @@ export const addAnnouncement = async (announcement: Omit<Announcement, "id">) =>
     }
 
     const data = await response.json();
-    console.log("✅ Server Response:", data);
+
     showToast("Announcement added successfully!", "success");
     return data;
   } catch (error) {

@@ -75,7 +75,7 @@ export const getTransactionThunk = createAsyncThunk(
 export const addTransactionThunk = createAsyncThunk(
   "transactions/add",
   async (transaction: Transaction, { rejectWithValue }) => {
-    console.log(API_URL)
+ 
     try {
       const response = await fetch(API_URL, {
         method: "POST",
@@ -218,21 +218,14 @@ export const filterTransactionsThunk = createAsyncThunk<
     try {
       const queryParams = new URLSearchParams(filters as any).toString();
       const fullUrl = `${API_URL}/filter?${queryParams}`;
-
-      console.log("🔍 Filter Query Params:", filters);
-      console.log("🌐 Full URL:", fullUrl);
-
       const response = await fetch(fullUrl, {
         headers: getAuthHeaders(),
         credentials: "include", // Include cookies in the request
       });
 
-      console.log("📥 Raw Response Status:", response.status);
-
       if (!response.ok) throw new Error("Failed to filter transactions");
 
       const data = await response.json();
-      console.log("✅ Filtered Transactions:", data);
 
       return data;
     } catch (error: any) {

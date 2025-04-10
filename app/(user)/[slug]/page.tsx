@@ -37,7 +37,7 @@ export default async function Page({ params }: { params?: { slug?: string } }) {
   }
 
   const { component: PageComponent, apiEndpoint } = pageData;
-  console.log(apiEndpoint);
+
   let data = [];
 
   try {
@@ -51,7 +51,7 @@ export default async function Page({ params }: { params?: { slug?: string } }) {
   } catch (error) {
     console.error("Error fetching data:", error);
   }
-  console.log(apiEndpoint, data);
+
   return (
     <main className="flex-grow flex items-center justify-center">
       <PageComponent data={data} />

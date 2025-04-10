@@ -48,7 +48,6 @@ export default function EditModal({
       resetForm,
     }: { setSubmitting: (isSubmitting: boolean) => void; resetForm: () => void }
   ) => {
-    console.log("🚀 Data being sent to API:", values);
 
     try {
       await dispatch(updateTaxFormThunk(values)).unwrap();

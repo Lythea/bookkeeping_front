@@ -47,7 +47,6 @@ export default function AddModal({ isOpen, onClose }: AddModalProps) {
       resetForm,
     }: { setSubmitting: (isSubmitting: boolean) => void; resetForm: () => void }
   ) => {
-    console.log("🚀 Data being sent to API:", values);
 
     try {
       await dispatch(addTaxFormThunk(values)).unwrap();

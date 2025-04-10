@@ -6,8 +6,6 @@ export default function Dashboard({ stats }: { stats: any }) {
   const [taxFormToNotify, setTaxFormToNotify] = useState<any | null>(null);
 
   useEffect(() => {
-    console.log("Received stats:", stats);
-
     const upcomingTaxForm = stats.taxform.find((form: any) => {
       const today = new Date();
       const dueDate = new Date(form.due_date);

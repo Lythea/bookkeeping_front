@@ -14,7 +14,6 @@ interface ServiceProps {
 }
 
 export default function Services({ data }: ServiceProps) {
-  console.log(data);
 
   return (
     <div className="flex flex-col bg-white">

@@ -56,7 +56,6 @@ export const getProofOfTransaction = async (id: number) => {
 // Add a new proof of transaction
 export const addProofOfTransaction = async (proofOfTransaction: Omit<ProofOfTransaction, "id">) => {
   try {
-    console.log("🚀 Data being sent:", proofOfTransaction);
 
     const response = await fetch(API_URL, {
       method: "POST",
@@ -72,7 +71,7 @@ export const addProofOfTransaction = async (proofOfTransaction: Omit<ProofOfTran
     }
 
     const data = await response.json();
-    console.log("✅ Server Response:", data);
+
     showToast("Proof of transaction added successfully!", "success");
     return data;
   } catch (error) {
