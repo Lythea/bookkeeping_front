@@ -10,9 +10,8 @@ interface Announcement {
 }
 
 const cookies = new Cookies(); // Create an instance to read cookies
-
 const getAuthHeaders = () => {
-  const token = cookies.get("authToken"); // Get the token from the cookies
+  const token = cookies.get("authToken");
   if (!token) {
     throw new Error("User is not authenticated");
   }
@@ -24,7 +23,9 @@ const getAuthHeaders = () => {
 
 export const fetchAnnouncements = async () => {
   try {
-    const response = await fetch(API_URL);
+    const response = await fetch(API_URL, {
+      credentials: "include", // Make sure cookies are sent
+    });
     if (!response.ok) throw new Error("Failed to fetch announcements");
     return response.json();
   } catch (error) {
@@ -35,7 +36,9 @@ export const fetchAnnouncements = async () => {
 
 export const getAnnouncement = async (id: number) => {
   try {
-    const response = await fetch(`${API_URL}/${id}`);
+    const response = await fetch(`${API_URL}/${id}`, {
+      credentials: "include", // Make sure cookies are sent
+    });
     if (!response.ok) throw new Error("Failed to fetch announcement");
     return response.json();
   } catch (error) {
@@ -50,8 +53,9 @@ export const addAnnouncement = async (announcement: Omit<Announcement, "id">) =>
 
     const response = await fetch(API_URL, {
       method: "POST",
-      headers: getAuthHeaders(), // Include the auth token in headers
+      headers: getAuthHeaders(),
       body: JSON.stringify(announcement),
+      credentials: "include", // Make sure cookies are sent
     });
 
     if (!response.ok) {
@@ -74,8 +78,9 @@ export const updateAnnouncement = async (announcement: Announcement) => {
   try {
     const response = await fetch(`${API_URL}/${announcement.id}`, {
       method: "PUT",
-      headers: getAuthHeaders(), // Include the auth token in headers
+      headers: getAuthHeaders(),
       body: JSON.stringify(announcement),
+      credentials: "include", // Make sure cookies are sent
     });
 
     if (!response.ok) throw new Error("Failed to update announcement");
@@ -92,7 +97,8 @@ export const deleteAnnouncement = async (id: number) => {
   try {
     const response = await fetch(`${API_URL}/${id}`, {
       method: "DELETE",
-      headers: getAuthHeaders(), // Include the auth token in headers
+      headers: getAuthHeaders(),
+      credentials: "include", // Make sure cookies are sent
     });
 
     if (!response.ok) throw new Error("Failed to delete announcement");

@@ -38,6 +38,7 @@ export const fetchTransactionsThunk = createAsyncThunk(
     try {
       const response = await fetch(API_URL, {
         headers: getAuthHeaders(),
+        credentials: "include", // Include cookies in the request
       });
       if (!response.ok) throw new Error("Failed to fetch transactions");
       return await response.json();
@@ -55,6 +56,7 @@ export const getTransactionThunk = createAsyncThunk(
     try {
       const response = await fetch(`${API_URL}/${id}`, {
         headers: getAuthHeaders(),
+        credentials: "include", // Include cookies in the request
       });
       if (!response.ok) throw new Error("Failed to fetch transaction");
       return await response.json();
@@ -74,6 +76,7 @@ export const addTransactionThunk = createAsyncThunk(
         method: "POST",
         headers: getAuthHeaders(),
         body: JSON.stringify(transaction),
+        credentials: "include", // Include cookies in the request
       });
 
       if (!response.ok) {
@@ -101,6 +104,7 @@ export const updateTransactionThunk = createAsyncThunk(
         method: "PUT",
         headers: getAuthHeaders(),
         body: JSON.stringify(transaction),
+        credentials: "include", // Include cookies in the request
       });
 
       if (!response.ok) throw new Error("Failed to update transaction");
@@ -122,6 +126,7 @@ export const deleteTransactionThunk = createAsyncThunk(
       const response = await fetch(`${API_URL}/${id}`, {
         method: "DELETE",
         headers: getAuthHeaders(),
+        credentials: "include", // Include cookies in the request
       });
 
       if (!response.ok) throw new Error("Failed to delete transaction");
@@ -144,6 +149,7 @@ export const updateStatusThunk = createAsyncThunk(
         method: "PUT",
         headers: getAuthHeaders(),
         body: JSON.stringify({ status }),
+        credentials: "include", // Include cookies in the request
       });
 
       if (!response.ok) throw new Error("Failed to update status");
@@ -164,6 +170,7 @@ export const updateTransactThunk = createAsyncThunk(
         method: "PUT",
         headers: getAuthHeaders(),
         body: JSON.stringify({ transact }),
+        credentials: "include", // Include cookies in the request
       });
 
       if (!response.ok) throw new Error("Failed to update transact");
@@ -192,6 +199,7 @@ export const filterTransactionsThunk = createAsyncThunk<
 
       const response = await fetch(fullUrl, {
         headers: getAuthHeaders(),
+        credentials: "include", // Include cookies in the request
       });
 
       console.log("📥 Raw Response Status:", response.status);

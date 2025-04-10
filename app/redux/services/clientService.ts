@@ -3,10 +3,19 @@ import { showToast } from "@/components/toast";
 
 const cookies = new Cookies();
 const API_URL = process.env.NEXT_PUBLIC_API_URL + "/api/clients";
-
+interface Client {
+  id: number;
+  name: string;
+  phone: string;
+  address: string;
+  business_type: string;
+  business_name: string;
+  tin_id: string;
+}
+// Function to get the Authorization headers with the token
 const getAuthHeaders = () => {
   const token = cookies.get("authToken");
-  
+
   // Log the token to see what it contains
   console.log("🚀 authToken:", token);
   
@@ -20,21 +29,12 @@ const getAuthHeaders = () => {
   };
 };
 
-
-interface Client {
-  id: number;
-  name: string;
-  phone: string;
-  address: string;
-  business_type: string;
-  business_name: string;
-  tin_id: string;
-}
-
+// Function to fetch all clients
 export const fetchClients = async () => {
   try {
     const response = await fetch(API_URL, {
       headers: getAuthHeaders(),
+      credentials: "include", // Make sure cookies are included
     });
     if (!response.ok) throw new Error("Failed to fetch clients");
     return response.json();
@@ -44,10 +44,12 @@ export const fetchClients = async () => {
   }
 };
 
+// Function to fetch a specific client by ID
 export const getClient = async (id: number) => {
   try {
     const response = await fetch(`${API_URL}/${id}`, {
       headers: getAuthHeaders(),
+      credentials: "include", // Make sure cookies are included
     });
     if (!response.ok) throw new Error("Failed to fetch client");
     return response.json();
@@ -57,6 +59,7 @@ export const getClient = async (id: number) => {
   }
 };
 
+// Function to add a new client
 export const addClient = async (client: Omit<Client, "id">) => {
   try {
     console.log("🚀 Data being sent:", client);
@@ -65,6 +68,7 @@ export const addClient = async (client: Omit<Client, "id">) => {
       method: "POST",
       headers: getAuthHeaders(),
       body: JSON.stringify(client),
+      credentials: "include", // Make sure cookies are included
     });
 
     if (!response.ok) {
@@ -83,12 +87,14 @@ export const addClient = async (client: Omit<Client, "id">) => {
   }
 };
 
+// Function to update a specific client by ID
 export const updateClient = async (client: Client) => {
   try {
     const response = await fetch(`${API_URL}/${client.id}`, {
       method: "PUT",
       headers: getAuthHeaders(),
       body: JSON.stringify(client),
+      credentials: "include", // Make sure cookies are included
     });
 
     if (!response.ok) throw new Error("Failed to update client");
@@ -101,11 +107,13 @@ export const updateClient = async (client: Client) => {
   }
 };
 
+// Function to delete a specific client by ID
 export const deleteClient = async (id: number) => {
   try {
     const response = await fetch(`${API_URL}/${id}`, {
       method: "DELETE",
       headers: getAuthHeaders(),
+      credentials: "include", // Make sure cookies are included
     });
 
     if (!response.ok) throw new Error("Failed to delete client");

@@ -2,6 +2,7 @@ import { createAsyncThunk } from "@reduxjs/toolkit";
 import { showToast } from "@/components/toast";
 import Cookies from "universal-cookie";
 const cookies = new Cookies();
+
 const getAuthHeaders = () => {
   const token = cookies.get("authToken");
   if (!token) {
@@ -19,6 +20,7 @@ export const fetchServicesThunk = createAsyncThunk("services/fetch", async () =>
   try {
     const response = await fetch(API_URL, {
       headers: getAuthHeaders(),
+      credentials: "include", // Include cookies in the request
     });
     if (!response.ok) throw new Error("Failed to fetch services");
     return response.json();
@@ -33,6 +35,7 @@ export const getServiceThunk = createAsyncThunk("services/get", async (id: numbe
   try {
     const response = await fetch(`${API_URL}/${id}`, {
       headers: getAuthHeaders(),
+      credentials: "include", // Include cookies in the request
     });
     if (!response.ok) throw new Error("Failed to fetch service");
     return response.json();
@@ -51,6 +54,7 @@ export const addServiceThunk = createAsyncThunk(
         method: "POST",
         headers: getAuthHeaders(),
         body: formData, // FormData for file upload support
+        credentials: "include", // Include cookies in the request
       });
 
       if (!response.ok) throw new Error("Failed to add service");
@@ -69,6 +73,7 @@ export const updateServiceThunk = createAsyncThunk("services/update", async (ser
       method: "POST",
       headers: getAuthHeaders(),
       body: service, // Send FormData directly
+      credentials: "include", // Include cookies in the request
     });
 
     if (!response.ok) throw new Error("Failed to update service");
@@ -88,6 +93,7 @@ export const deleteServiceThunk = createAsyncThunk("services/delete", async (id:
     const response = await fetch(`${API_URL}/${id}`, {
       method: "DELETE",
       headers: getAuthHeaders(),
+      credentials: "include", // Include cookies in the request
     });
     if (!response.ok) throw new Error("Failed to delete service");
     showToast("Service deleted successfully!", "success");
@@ -109,6 +115,7 @@ export const deleteFormThunk = createAsyncThunk(
       const response = await fetch(`${API_URL}/${serviceId}/forms/${formIndex}`, {
         method: "DELETE",
         headers: getAuthHeaders(),
+        credentials: "include", // Include cookies in the request
       });
 
       if (!response.ok) {
@@ -141,6 +148,7 @@ export const updateServiceNameThunk = createAsyncThunk(
           ...getAuthHeaders(), // Add Authorization headers
         },
         body: JSON.stringify({ service: serviceName }),
+        credentials: "include", // Include cookies in the request
       });
 
       if (!response.ok) throw new Error("Failed to update service name");
@@ -163,6 +171,7 @@ export const deleteServiceWithFormsThunk = createAsyncThunk(
       const response = await fetch(`${API_URL}/${serviceId}`, {
         method: "DELETE",
         headers: getAuthHeaders(),
+        credentials: "include", // Include cookies in the request
       });
 
       if (!response.ok) throw new Error("Failed to delete service");

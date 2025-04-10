@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import Cookies from "universal-cookie";
-import { useRouter } from "next/router";
+import { useRouter } from "next/navigation";
 import { AiOutlineEye, AiOutlineEyeInvisible } from "react-icons/ai";
 
 interface LoginModalProps {
@@ -53,7 +53,9 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
         if (!cookies.get("authToken")) {
           cookies.set("authToken", data.token, {
             path: "/",
-            maxAge: 60 * 60 * 24 * 7, // Set token expiration for 7 days
+            maxAge: 60 * 60 * 24 * 7, // 7 days
+            secure: true, // Important for https
+            sameSite: "none", // Needed for cross-origin cookies
           });
         }
 

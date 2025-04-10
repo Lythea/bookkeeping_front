@@ -28,6 +28,7 @@ export const fetchTaxForms = async () => {
   try {
     const response = await fetch(API_URL, {
       headers: getAuthHeaders(),
+      credentials: "include", // Include cookies in the request
     });
     if (!response.ok) throw new Error("Failed to fetch tax forms");
     return response.json();
@@ -42,6 +43,7 @@ export const getTaxForm = async (id: number) => {
   try {
     const response = await fetch(`${API_URL}/${id}`, {
       headers: getAuthHeaders(),
+      credentials: "include", // Include cookies in the request
     });
     if (!response.ok) throw new Error("Failed to fetch tax form");
     return response.json();
@@ -58,6 +60,7 @@ export const addTaxForm = async (taxForm: Omit<TaxForm, "id">) => {
       method: "POST",
       headers: getAuthHeaders(),
       body: JSON.stringify(taxForm),
+      credentials: "include", // Include cookies in the request
     });
 
     if (!response.ok) {
@@ -82,6 +85,7 @@ export const updateTaxForm = async (taxForm: TaxForm) => {
       method: "PUT",
       headers: getAuthHeaders(),
       body: JSON.stringify(taxForm),
+      credentials: "include", // Include cookies in the request
     });
 
     if (!response.ok) throw new Error("Failed to update tax form");
@@ -100,6 +104,7 @@ export const deleteTaxForm = async (id: number) => {
     const response = await fetch(`${API_URL}/${id}`, {
       method: "DELETE",
       headers: getAuthHeaders(),
+      credentials: "include", // Include cookies in the request
     });
 
     if (!response.ok) throw new Error("Failed to delete tax form");
