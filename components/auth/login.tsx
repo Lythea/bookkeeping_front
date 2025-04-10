@@ -31,15 +31,15 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
     if (isLoading) return;
 
     setIsLoading(true);
-    setErrorMessage("");
-    console.log(email, password);
+    setErrorMessage(""); // Reset error message before making the request
+    console.log("Login attempt with email:", email);
+
     try {
       const response = await fetch(`${API_URL}/api/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-
         body: JSON.stringify({
           email: email,
           password: password,
@@ -49,24 +49,39 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
       const data = await response.json();
 
       if (response.ok) {
+        // If login is successful, set the authentication token in cookies
         if (!cookies.get("authToken")) {
           cookies.set("authToken", data.token, {
             path: "/",
-            maxAge: 60 * 60 * 24 * 7,
+            maxAge: 60 * 60 * 24 * 7, // Set token expiration for 7 days
           });
         }
 
         setIsLoading(false);
-        onClose();
-
-        router.push("/admin");
+        onClose(); // Close the login modal
+        router.push("/admin"); // Redirect to the admin page
       } else {
+        // In case of unsuccessful login, show the error message from the server
         setIsLoading(false);
-        setErrorMessage(data.message || "Login failed");
+        setErrorMessage(
+          data.message ||
+            "Login failed. Please check your credentials and try again."
+        );
+        console.error("Login error:", data); // Log the error details for debugging
       }
     } catch (error) {
+      // In case of network or unexpected errors, handle them gracefully
       setIsLoading(false);
-      setErrorMessage("An error occurred. Please try again.");
+
+      if (error instanceof Error) {
+        // If the error is a standard JavaScript Error, log the message and stack trace
+        setErrorMessage(`An error occurred: ${error.message}`);
+        console.error("Error details:", error.stack); // Log stack trace for debugging
+      } else {
+        // If it's a non-standard error (e.g., a response error object), provide a generic message
+        setErrorMessage("An error occurred. Please try again later.");
+        console.error("Unknown error:", error); // Log the error details for debugging
+      }
     }
   };
 
