@@ -61,7 +61,7 @@ export const addProofOfTransaction = async (proofOfTransaction: Omit<ProofOfTran
       method: "POST",
       headers: getAuthHeaders(),
       body: JSON.stringify(proofOfTransaction),
-      credentials: "include", // Make sure cookies are included
+      credentials: "include", 
     });
 
     if (!response.ok) {
