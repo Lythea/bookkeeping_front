@@ -3,19 +3,32 @@ import { showToast } from "@/components/toast";
 
 const cookies = new Cookies();
 const API_URL = process.env.NEXT_PUBLIC_API_URL + "/api/clients";
-interface Client {
-  id: number;
-  name: string;
-  phone: string;
-  address: string;
-  business_type: string;
+
+// Updated Client and Business interfaces
+export interface Business {
   business_name: string;
-  tin_id: string;
+  line_of_business: string;
+  registered_address: string;
+  started_date: string;
+  tin: string;
+  zip_code: string;
 }
+
+export interface Client {
+  id?: number;
+  firstname: string;
+  lastname: string;
+  middlename: string | null;
+  birthday: string;
+  email: string | null;
+  contact_number: string | null;
+  business: Business[];
+}
+
 // Function to get the Authorization headers with the token
 const getAuthHeaders = () => {
   const token = cookies.get("authToken");
-
+  console.log(token);
 
   if (!token) {
     throw new Error("User is not authenticated");
@@ -57,14 +70,13 @@ export const getClient = async (id: number) => {
   }
 };
 
-// Function to add a new client
+// Function to add a new client (including email and contact_number)
 export const addClient = async (client: Omit<Client, "id">) => {
   try {
-
     const response = await fetch(API_URL, {
       method: "POST",
       headers: getAuthHeaders(),
-      body: JSON.stringify(client),
+      body: JSON.stringify(client), // Send the updated client with email and contact_number
       credentials: "include", // Make sure cookies are included
     });
 
@@ -75,7 +87,6 @@ export const addClient = async (client: Omit<Client, "id">) => {
     }
 
     const data = await response.json();
-  
     showToast("Client added successfully!", "success");
     return data;
   } catch (error) {
@@ -84,13 +95,13 @@ export const addClient = async (client: Omit<Client, "id">) => {
   }
 };
 
-// Function to update a specific client by ID
+// Function to update a specific client by ID (including email and contact_number)
 export const updateClient = async (client: Client) => {
   try {
     const response = await fetch(`${API_URL}/${client.id}`, {
       method: "PUT",
       headers: getAuthHeaders(),
-      body: JSON.stringify(client),
+      body: JSON.stringify(client), // Send the updated client with email and contact_number
       credentials: "include", // Make sure cookies are included
     });
 

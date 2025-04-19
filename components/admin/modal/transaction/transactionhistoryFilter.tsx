@@ -1,37 +1,68 @@
 import { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { filterTransactionsThunk } from "@/app/redux/services/transactionService";
-import { AppDispatch } from "@/app/redux/store";
+import { AppDispatch, RootState } from "@/app/redux/store";
 import TransactionHistoryReceipt from "@/components/admin/export/transactionhistory";
-import { RootState } from "@/app/redux/store"; // Import the RootState type
+
+interface Business {
+  business_name: string;
+  line_of_business: string;
+  registered_address: string;
+  started_date: string;
+  tin: string;
+  zip_code: string;
+}
+
+interface Client {
+  firstname: string;
+  middlename: string;
+  lastname: string;
+  business: Business[];
+}
+interface Inquiry {
+  name: string;
+  price: string;
+  service: string;
+}
+interface Transaction {
+  id: number;
+  name: string; // Full name of the client
+  status: string;
+  date: string;
+  inquiries: Inquiry[];
+  tin_id: string;
+  business_name: string;
+}
 
 interface HistoryInfoProps {
   onClose: () => void;
-  transactionNames: string[]; // Accept the list of transaction names
+  clients: Client[];
+  transactions: Transaction[];
 }
 
-const HistoryInfo = ({ onClose, transactionNames }: HistoryInfoProps) => {
+const HistoryInfo = ({ onClose, clients, transactions }: HistoryInfoProps) => {
   const dispatch = useDispatch<AppDispatch>();
   const { filteredTransactions, loading, error } = useSelector(
-    (state: RootState) => state.transactions // Type the state as RootState
+    (state: RootState) => state.transactions
   );
-
-  const [selectedName, setSelectedName] = useState<string | null>(null);
+  console.log(clients, transactions);
+  const [selectedClientIndex, setSelectedClientIndex] = useState<number | null>(
+    null
+  );
+  const [selectedBusinessName, setSelectedBusinessName] = useState<
+    string | null
+  >(null);
   const [dateOption, setDateOption] = useState<"now" | "specific">("now");
   const [dateFrom, setDateFrom] = useState<string>("");
   const [dateTo, setDateTo] = useState<string>("");
-  const [filteredData, setFilteredData] = useState<any[]>([]); // Store filtered transactions
-  const [isFiltered, setIsFiltered] = useState(false); // Track if filter has been applied
-
+  const [filteredData, setFilteredData] = useState<any[]>([]);
+  const [isFiltered, setIsFiltered] = useState(false);
+  console.log(transactions);
   const handleDateChange = (
     e: React.ChangeEvent<HTMLInputElement>,
     type: "from" | "to"
   ) => {
-    if (type === "from") {
-      setDateFrom(e.target.value);
-    } else {
-      setDateTo(e.target.value);
-    }
+    type === "from" ? setDateFrom(e.target.value) : setDateTo(e.target.value);
   };
 
   const handleDateOptionChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -40,7 +71,22 @@ const HistoryInfo = ({ onClose, transactionNames }: HistoryInfoProps) => {
 
   const handleApplyFilter = async () => {
     const filters: any = {};
-    if (selectedName) filters.name = selectedName;
+
+    if (selectedClientIndex !== null) {
+      const client = clients[selectedClientIndex];
+      filters.name = `${client.firstname} ${client.middlename} ${client.lastname}`;
+    }
+
+    if (selectedBusinessName && selectedClientIndex !== null) {
+      const client = clients[selectedClientIndex];
+      const selectedBiz = client.business.find(
+        (b) => b.business_name === selectedBusinessName
+      );
+      if (selectedBiz) {
+        filters.business_name = selectedBiz.business_name;
+        filters.tin_id = selectedBiz.tin; // ✅ Include TIN
+      }
+    }
 
     if (dateOption === "specific") {
       if (dateFrom && dateTo) {
@@ -53,16 +99,16 @@ const HistoryInfo = ({ onClose, transactionNames }: HistoryInfoProps) => {
       filters.dateTo = today;
     }
 
-
     const action = await dispatch(filterTransactionsThunk(filters));
 
+    console.log("Filter Action Payload:", filters);
+
     if (filterTransactionsThunk.fulfilled.match(action)) {
-     
-      setFilteredData(action.payload); // Set the filtered data
-      setIsFiltered(true); // Mark that filter is applied
+      setFilteredData(action.payload);
+      setIsFiltered(true);
     } else {
-      setFilteredData([]); // Set empty array if no data is returned
-      setIsFiltered(true); // Mark that filter is applied
+      setFilteredData([]);
+      setIsFiltered(true);
       console.error("Failed to fetch filtered transactions.");
     }
   };
@@ -72,98 +118,129 @@ const HistoryInfo = ({ onClose, transactionNames }: HistoryInfoProps) => {
       <div className="bg-white p-6 shadow-md rounded-md w-96">
         <h2 className="text-2xl font-semibold mb-4">Transaction History</h2>
 
-        {/* Transaction Name Selection */}
+        {/* Select Client */}
         <div className="mb-4">
           <label className="block text-sm font-medium mb-2">
-            Select Transaction Name
+            Select Client Name
           </label>
           <select
-            value={selectedName || ""}
-            onChange={(e) => setSelectedName(e.target.value)}
+            value={selectedClientIndex ?? ""}
+            onChange={(e) => {
+              const index = Number(e.target.value);
+              setSelectedClientIndex(index);
+              setSelectedBusinessName(null); // reset business selection
+            }}
             className="w-full p-2 border rounded"
           >
-            <option value="">Select a transaction</option>
-            {Array.from(new Set(transactionNames)).map((name, index) => (
-              <option key={index} value={name}>
-                {name}
-              </option>
-            ))}
+            <option value="">Select a client</option>
+            {clients
+              .map((client, index) => ({
+                index,
+                fullName: `${client.firstname} ${client.middlename} ${client.lastname}`,
+              }))
+              .filter((clientObj) =>
+                transactions.some((t) => t.name === clientObj.fullName)
+              )
+              .map((filteredClient) => (
+                <option key={filteredClient.index} value={filteredClient.index}>
+                  {filteredClient.fullName}
+                </option>
+              ))}
           </select>
         </div>
 
-        {/* Date Option Selection */}
+        {/* Select Business (only when a client is selected) */}
+        {selectedClientIndex !== null &&
+          clients[selectedClientIndex].business &&
+          clients[selectedClientIndex].business.length > 0 && (
+            <div className="mb-4">
+              <label className="block text-sm font-medium mb-2">
+                Select Business
+              </label>
+              <select
+                value={selectedBusinessName ?? ""}
+                onChange={(e) => setSelectedBusinessName(e.target.value)}
+                className="w-full p-2 border rounded"
+              >
+                {clients[selectedClientIndex].business.map((biz, idx) => (
+                  <option key={idx} value={biz.business_name}>
+                    {biz.business_name}
+                  </option>
+                ))}
+              </select>
+              {selectedBusinessName &&
+                (() => {
+                  const biz = clients[selectedClientIndex].business.find(
+                    (b) => b.business_name === selectedBusinessName
+                  );
+                  return biz ? (
+                    <div className="mt-2 text-sm text-gray-700">
+                      <p>
+                        <strong>TIN:</strong> {biz.tin}
+                      </p>
+                    </div>
+                  ) : null;
+                })()}
+            </div>
+          )}
+
+        {/* Date Option */}
         <div className="mb-4">
           <label className="block text-sm font-medium mb-2">
             Select Date Range
           </label>
           <div className="flex space-x-4">
-            <div>
+            <label>
               <input
                 type="radio"
-                id="now"
                 name="dateOption"
                 value="now"
                 checked={dateOption === "now"}
                 onChange={handleDateOptionChange}
                 className="mr-2"
               />
-              <label htmlFor="now">Now</label>
-            </div>
-            <div>
+              Now
+            </label>
+            <label>
               <input
                 type="radio"
-                id="specific"
                 name="dateOption"
                 value="specific"
                 checked={dateOption === "specific"}
                 onChange={handleDateOptionChange}
                 className="mr-2"
               />
-              <label htmlFor="specific">Specific Date</label>
-            </div>
+              Specific Date
+            </label>
           </div>
         </div>
 
-        {/* Specific Date Range Inputs */}
+        {/* Specific Dates */}
         {dateOption === "specific" && (
-          <div className="mb-4">
-            <div className="flex space-x-4">
-              <div>
-                <label
-                  htmlFor="dateFrom"
-                  className="block text-sm font-medium mb-2"
-                >
-                  From:
-                </label>
-                <input
-                  type="date"
-                  id="dateFrom"
-                  value={dateFrom}
-                  onChange={(e) => handleDateChange(e, "from")}
-                  className="w-full p-2 border rounded"
-                />
-              </div>
-              <div>
-                <label
-                  htmlFor="dateTo"
-                  className="block text-sm font-medium mb-2"
-                >
-                  To:
-                </label>
-                <input
-                  type="date"
-                  id="dateTo"
-                  value={dateTo}
-                  onChange={(e) => handleDateChange(e, "to")}
-                  className="w-full p-2 border rounded"
-                />
-              </div>
+          <div className="mb-4 flex space-x-4">
+            <div>
+              <label className="block text-sm mb-1">From:</label>
+              <input
+                type="date"
+                value={dateFrom}
+                onChange={(e) => handleDateChange(e, "from")}
+                className="w-full p-2 border rounded"
+              />
+            </div>
+            <div>
+              <label className="block text-sm mb-1">To:</label>
+              <input
+                type="date"
+                value={dateTo}
+                onChange={(e) => handleDateChange(e, "to")}
+                className="w-full p-2 border rounded"
+              />
             </div>
           </div>
         )}
 
-        {/* Action Buttons */}
-        <div className="flex justify-end space-x-4">
+        {/* Buttons */}
+        <div className="flex justify-end space-x-4 mt-4">
           <button
             onClick={onClose}
             className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700"
@@ -175,15 +252,18 @@ const HistoryInfo = ({ onClose, transactionNames }: HistoryInfoProps) => {
             className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
             disabled={loading}
           >
-            {loading ? "Applying Filter..." : "Apply Filter"}
+            {loading ? "Applying..." : "Apply Filter"}
           </button>
         </div>
 
-        {/* Display Filtered Data or a Message */}
+        {/* Results */}
         {isFiltered && (
           <>
             {filteredData.length > 0 ? (
-              <TransactionHistoryReceipt data={filteredData} />
+              <TransactionHistoryReceipt
+                data={filteredData}
+                clients={clients}
+              />
             ) : (
               <p className="text-gray-500 mt-4">
                 No transactions found for the selected filters.

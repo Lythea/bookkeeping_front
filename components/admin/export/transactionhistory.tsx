@@ -19,6 +19,9 @@ interface Client {
 }
 
 interface Transaction {
+  address: any;
+  business_name: any;
+  name: any;
   invoiceNumber: string;
   date: string;
   client: Client;
@@ -27,11 +30,14 @@ interface Transaction {
 
 interface TransactionHistoryReceiptProps {
   data: Transaction[];
+  clients: any[];
 }
 
 const TransactionHistoryReceipt = ({
   data,
+  clients,
 }: TransactionHistoryReceiptProps) => {
+  console.log(data, clients);
   const generatePDF = () => {
     const doc = new jsPDF({
       orientation: "portrait",
@@ -110,9 +116,9 @@ const TransactionHistoryReceipt = ({
     const labelHeight = 0.25;
 
     // === BILL TO Section ===
+    // === BILL TO Section ===
     if (data.length > 0) {
       const firstTransaction = data[0];
-      const client = firstTransaction.client;
 
       // Draw blue background for BILL TO
       doc.setFillColor(...blueColor);
@@ -129,18 +135,30 @@ const TransactionHistoryReceipt = ({
       doc.setFontSize(10);
       doc.setFont("times", "normal");
 
+      // Build full name from client data and match with transaction name
+      // Build full name from client data and match with transaction name
+      const matchedClient = clients.find((client) => {
+        const fullName =
+          `${client.firstname} ${client.middlename} ${client.lastname}`
+            .trim()
+            .toUpperCase();
+        return fullName === firstTransaction.name.toUpperCase();
+      });
+
+      const business = matchedClient?.business?.[0];
+
       doc.text(
-        client.name.toLocaleUpperCase() || "Client Name",
+        firstTransaction.name?.toUpperCase() || "Client Name",
         marginLeft,
         1.7
       );
       doc.text(
-        client.business_name.toLocaleUpperCase() || "Business Name",
+        business?.business_name?.toUpperCase() || "Business Name",
         marginLeft,
         1.9
       );
       doc.text(
-        client.address.toLocaleUpperCase() || "Address",
+        business?.registered_address?.toUpperCase() || "Address",
         marginLeft,
         2.1
       );

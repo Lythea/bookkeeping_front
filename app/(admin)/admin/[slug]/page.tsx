@@ -3,8 +3,7 @@ import Services from "@/components/admin/pages/services";
 import Transaction from "@/components/admin/pages/transactions";
 import TaxCalendar from "@/components/admin/pages/taxcalendar";
 import Dashboard from "@/components/admin/pages/dashboard";
-import Announcement from "@/components/admin/pages/announcements";
-import ProofofTransaction from "@/components/admin/pages/proofoftransactions";
+
 import DataLogger from "@/components/datalogger"; // New client component
 
 import { cookies } from "next/headers"; // Import cookies API from Next.js
@@ -14,8 +13,6 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL;
 type AdminPageData = {
   dashboard?: any; // Add the types you expect for these data
   taxform?: any;
-  announcements?: any;
-  proofs?: any;
   [key: string]: any; // For other dynamic properties
 };
 
@@ -38,11 +35,6 @@ export default async function AdminPage({
       transactions: { component: Transaction, propKey: "transactions" },
       taxcalendar: { component: TaxCalendar, propKey: "events" },
       dashboard: { component: Dashboard, propKey: "stats" },
-      announcements: { component: Announcement, propKey: "announcements" },
-      proofoftransactions: {
-        component: ProofofTransaction,
-        propKey: "proofOfTransactions",
-      },
     };
 
   const pageData = slug ? pageMap[slug] : undefined;
@@ -64,22 +56,29 @@ export default async function AdminPage({
   let data: AdminPageData = {};
   let dashboardData = [];
   let taxformData = [];
-
+  let servicesData = [];
   try {
     if (slug === "dashboard") {
-      const dashboardRes = await fetch(`${API_URL}/api/dashboard`, {
-        headers: {
-          Authorization: `Bearer ${token.value}`, // Include token in headers
-        },
-        cache: "no-store",
-      });
-
-      const taxformRes = await fetch(`${API_URL}/api/taxcalendar`, {
-        headers: {
-          Authorization: `Bearer ${token.value}`, // Include token in headers
-        },
-        cache: "no-store",
-      });
+      const [dashboardRes, taxformRes, transactionsRes] = await Promise.all([
+        fetch(`${API_URL}/api/dashboard`, {
+          headers: {
+            Authorization: `Bearer ${token.value}`,
+          },
+          cache: "no-store",
+        }),
+        fetch(`${API_URL}/api/taxcalendar`, {
+          headers: {
+            Authorization: `Bearer ${token.value}`,
+          },
+          cache: "no-store",
+        }),
+        fetch(`${API_URL}/api/transactions`, {
+          headers: {
+            Authorization: `Bearer ${token.value}`,
+          },
+          cache: "no-store",
+        }),
+      ]);
 
       if (dashboardRes.ok) {
         dashboardData = await dashboardRes.json();
@@ -89,7 +88,81 @@ export default async function AdminPage({
         taxformData = await taxformRes.json();
       }
 
-      data = { dashboard: dashboardData, taxform: taxformData };
+      const transactionsData = transactionsRes.ok
+        ? await transactionsRes.json()
+        : [];
+
+      data = {
+        dashboard: dashboardData,
+        taxform: taxformData,
+        transactions: transactionsData, // ✅ added transactions data here
+      };
+    } else if (slug === "transactions") {
+      const [transactionsRes, clientsRes, servicesRes] = await Promise.all([
+        fetch(`${API_URL}/api/transactions`, {
+          headers: {
+            Authorization: `Bearer ${token.value}`,
+          },
+          cache: "no-store",
+        }),
+        fetch(`${API_URL}/api/clients`, {
+          headers: {
+            Authorization: `Bearer ${token.value}`,
+          },
+          cache: "no-store",
+        }),
+        fetch(`${API_URL}/api/services`, {
+          headers: {
+            Authorization: `Bearer ${token.value}`,
+          },
+          cache: "no-store",
+        }),
+      ]);
+      const transactionsData = transactionsRes.ok
+        ? await transactionsRes.json()
+        : [];
+
+      const clientsData = clientsRes.ok ? await clientsRes.json() : [];
+
+      const servicesData = servicesRes.ok ? await servicesRes.json() : [];
+
+      data = {
+        transactions: transactionsData,
+        clients: clientsData,
+        services: servicesData,
+      };
+    } else if (slug === "taxcalendar") {
+      // Fetch services data when slug is "taxcalendar"
+      const servicesRes = await fetch(`${API_URL}/api/services`, {
+        headers: {
+          Authorization: `Bearer ${token.value}`,
+        },
+        cache: "no-store",
+      });
+
+      const taxformRes = await fetch(`${API_URL}/api/taxcalendar`, {
+        headers: {
+          Authorization: `Bearer ${token.value}`,
+        },
+        cache: "no-store",
+      });
+
+      if (servicesRes.ok) {
+        servicesData = await servicesRes.json();
+      } else {
+        console.log("Failed to fetch services");
+      }
+
+      if (taxformRes.ok) {
+        taxformData = await taxformRes.json();
+      } else {
+        console.log("Failed to fetch taxcalendar");
+      }
+
+      data = {
+        events: taxformData,
+        services: servicesData, // Add services data
+      };
     } else {
       const res = await fetch(`${API_URL}/api/${slug}`, {
         headers: {
@@ -105,6 +178,7 @@ export default async function AdminPage({
   } catch (error) {
     console.error("Fetch error:", error);
   }
+  console.log(data);
 
   return (
     <>

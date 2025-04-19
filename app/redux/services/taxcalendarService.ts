@@ -15,12 +15,12 @@ const getAuthHeaders = () => {
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL + "/api/taxcalendar";
 
+// Updated TaxForm interface based on model (only form_no, due_date, frequency)
 interface TaxForm {
   id: number;
   form_no: string;
-  latest_revision_date: string;
-  form_name: string;
   due_date: string;
+  frequency: string;
 }
 
 // Fetch all tax forms
@@ -28,7 +28,7 @@ export const fetchTaxForms = async () => {
   try {
     const response = await fetch(API_URL, {
       headers: getAuthHeaders(),
-      credentials: "include", // Include cookies in the request
+      credentials: "include",
     });
     if (!response.ok) throw new Error("Failed to fetch tax forms");
     return response.json();
@@ -43,7 +43,7 @@ export const getTaxForm = async (id: number) => {
   try {
     const response = await fetch(`${API_URL}/${id}`, {
       headers: getAuthHeaders(),
-      credentials: "include", // Include cookies in the request
+      credentials: "include",
     });
     if (!response.ok) throw new Error("Failed to fetch tax form");
     return response.json();
@@ -60,7 +60,7 @@ export const addTaxForm = async (taxForm: Omit<TaxForm, "id">) => {
       method: "POST",
       headers: getAuthHeaders(),
       body: JSON.stringify(taxForm),
-      credentials: "include", // Include cookies in the request
+      credentials: "include",
     });
 
     if (!response.ok) {
@@ -85,14 +85,20 @@ export const updateTaxForm = async (taxForm: TaxForm) => {
       method: "PUT",
       headers: getAuthHeaders(),
       body: JSON.stringify(taxForm),
-      credentials: "include", // Include cookies in the request
+      credentials: "include",
     });
 
-    if (!response.ok) throw new Error("Failed to update tax form");
+    if (!response.ok) {
+      const errorResponse = await response.json();
+      console.error("Error response from server:", errorResponse);
+      throw new Error("Failed to update tax form");
+    }
 
+    const responseData = await response.json();
     showToast("Tax form updated successfully!", "success");
-    return response.json();
+    return responseData;
   } catch (error) {
+    console.error("❌ Failed to update tax form:", error);
     showToast("Failed to update tax form", "error");
     throw error;
   }
@@ -104,7 +110,7 @@ export const deleteTaxForm = async (id: number) => {
     const response = await fetch(`${API_URL}/${id}`, {
       method: "DELETE",
       headers: getAuthHeaders(),
-      credentials: "include", // Include cookies in the request
+      credentials: "include",
     });
 
     if (!response.ok) throw new Error("Failed to delete tax form");

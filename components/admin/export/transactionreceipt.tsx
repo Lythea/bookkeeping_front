@@ -5,28 +5,47 @@ interface Inquiry {
   price: string;
   service: string;
 }
-
 interface Transaction {
   id: number;
-  address: string;
-  contact: string;
-  created_at: string;
-  date: string;
-  email: string;
-  inquiries: Inquiry[];
-  name: string;
+  name: string; // Full name of the client
   status: string;
-  transact: string;
-  updated_at: string;
+  date: string;
+  inquiries: Inquiry[];
+  tin_id: string;
+  business_name: string;
 }
 
-const generateReceiptPDF = (transaction: Transaction) => {
+export interface Business {
+  business_name: string;
+  line_of_business: string;
+  registered_address: string;
+  started_date: string;
+  tin: string;
+  zip_code: string;
+}
+
+export interface Client {
+  id: number;
+  firstname: string;
+  lastname: string;
+  middlename: string | null;
+  birthday: string;
+  email: string | null;
+  contact_number: string | null;
+  business: Business[];
+}
+
+const generateReceiptPDF = (transaction: Transaction, client: Client) => {
   const doc = new jsPDF({ unit: "in", format: [4.25, 5.5] });
 
   // HEADER SECTION
+  doc.addImage("/logo/logoround.png", "PNG", 0.25, 0.3, 0.5, 0.5); // Position the logo
+
   doc.setFontSize(14);
   doc.setFont("helvetica", "bold");
-  doc.text("WE Guarantee", 2.125, 0.4, { align: "center" });
+  doc.text("W&E Guarantee Bookkeeping", 0.75, 0.4, {
+    align: "left",
+  });
 
   doc.setFontSize(10);
   doc.setFont("helvetica", "normal");
@@ -55,11 +74,18 @@ const generateReceiptPDF = (transaction: Transaction) => {
   doc.text(`Date: ${transaction.date}`, 2.25, y);
 
   y += 0.2;
-  doc.text(`Address: ${transaction.address}`, 2.25, y);
-  doc.text(`Email: ${transaction.email}`, 0.25, y);
+
+  // Find the business with the matching TIN ID
+  const business = client.business.find(
+    (business) => business.tin === transaction.tin_id
+  );
+
+  // Use the business registered_address
+  doc.text(`Address: ${business?.registered_address || "N/A"}`, 2.25, y);
+  doc.text(`Email: ${client.email || "N/A"}`, 0.25, y); // Use client data
 
   y += 0.2;
-  doc.text(`Contact: ${transaction.contact}`, 0.25, y);
+  doc.text(`Contact: ${client.contact_number || "N/A"}`, 0.25, y); // Use client data
 
   // Divider Line before inquiries
   y += 0.2;

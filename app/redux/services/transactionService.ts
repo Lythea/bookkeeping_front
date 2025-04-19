@@ -3,7 +3,22 @@ import { showToast } from "@/components/toast";
 import Cookies from "universal-cookie";
 const cookies = new Cookies();
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL + "/api/transactions";
+// Transaction interface
+interface Inquiry {
+  name: string;
+  price: string;
+  service: string;
+}
+interface Transaction {
+  id: number;
+  name: string; // Full name of the client
+  status: string;
+  date: string;
+  inquiries: Inquiry[];
+  tin_id: string;
+  business_name: string;
+}
+
 
 // Function to get the Authorization headers with the token
 const getAuthHeaders = (requiresAuth = true) => {
@@ -22,20 +37,7 @@ const getAuthHeaders = (requiresAuth = true) => {
   };
 };
 
-
-// Transaction interface
-interface Transaction {
-  id: number;
-  service: string;
-  name: string;
-  address: string;
-  email: string;
-  contact: string;
-  date: string;
-  status: string;
-  transact: string;
-  inquiries: any[];
-}
+const API_URL = process.env.NEXT_PUBLIC_API_URL + "/api/transactions";
 
 // 🔁 1. Fetch All Transactions
 export const fetchTransactionsThunk = createAsyncThunk(
@@ -47,7 +49,7 @@ export const fetchTransactionsThunk = createAsyncThunk(
         credentials: "include", // Include cookies in the request
       });
       if (!response.ok) throw new Error("Failed to fetch transactions");
-      return await response.json();
+      return await response.json();  // Ensures the fetched data matches the Transaction structure
     } catch (error) {
       showToast("Failed to fetch transactions", "error");
       return rejectWithValue(error.message || 'An unexpected error occurred');
@@ -65,22 +67,23 @@ export const getTransactionThunk = createAsyncThunk(
         credentials: "include", // Include cookies in the request
       });
       if (!response.ok) throw new Error("Failed to fetch transaction");
-      return await response.json();
+      return await response.json(); // Ensures the data returned matches the Transaction structure
     } catch (error) {
       showToast("Failed to fetch transaction", "error");
       return rejectWithValue(error.message || 'An unexpected error occurred');
     }
   }
 );
+
+// ➕ 3. Add Transaction
 export const addTransactionThunk = createAsyncThunk(
   "transactions/add",
   async (transaction: Transaction, { rejectWithValue }) => {
- 
     try {
       const response = await fetch(API_URL, {
         method: "POST",
         headers: getAuthHeaders(false),  // Passing false, meaning no token is required
-        body: JSON.stringify(transaction),
+        body: JSON.stringify(transaction),  // Ensure the request matches the Transaction structure
         credentials: "include", // Include cookies in the request
       });
 
@@ -91,7 +94,7 @@ export const addTransactionThunk = createAsyncThunk(
           status: errorStatus,
           message: errorText,
           url: API_URL,
-          requestPayload: transaction, // Optional: Include the request payload for debugging
+          requestPayload: transaction, // Include the request payload for debugging
         };
 
         console.error("Failed to add transaction:", errorDetails);
@@ -100,9 +103,8 @@ export const addTransactionThunk = createAsyncThunk(
 
       const data = await response.json();
       showToast("Transaction added successfully!", "success");
-      return data;
+      return data;  // Ensure the returned data matches the Transaction structure
     } catch (error) {
-      // Detailed error logging
       const detailedError = {
         message: error.message || "Unknown error",
         stack: error.stack,
@@ -119,7 +121,6 @@ export const addTransactionThunk = createAsyncThunk(
   }
 );
 
-
 // 🔁 4. Update Transaction
 export const updateTransactionThunk = createAsyncThunk(
   "transactions/update",
@@ -128,14 +129,14 @@ export const updateTransactionThunk = createAsyncThunk(
       const response = await fetch(`${API_URL}/${transaction.id}`, {
         method: "PUT",
         headers: getAuthHeaders(),
-        body: JSON.stringify(transaction),
+        body: JSON.stringify(transaction),  // Ensure the body matches the Transaction structure
         credentials: "include", // Include cookies in the request
       });
 
       if (!response.ok) throw new Error("Failed to update transaction");
 
       showToast("Transaction updated successfully!", "success");
-      return await response.json();
+      return await response.json(); // Ensures the returned data matches the Transaction structure
     } catch (error) {
       showToast("Failed to update transaction", "error");
       return rejectWithValue(error.message || "Failed to update transaction");
@@ -157,7 +158,7 @@ export const deleteTransactionThunk = createAsyncThunk(
       if (!response.ok) throw new Error("Failed to delete transaction");
 
       showToast("Transaction deleted successfully!", "success");
-      return id;
+      return id;  // Return the id to update the state
     } catch (error) {
       showToast("Failed to delete transaction", "error");
       return rejectWithValue(error.message || "Failed to delete transaction");
@@ -165,7 +166,7 @@ export const deleteTransactionThunk = createAsyncThunk(
   }
 );
 
-// Update Status Thunk
+// 🔄 6. Update Status
 export const updateStatusThunk = createAsyncThunk(
   "transactions/updateStatus",
   async ({ id, status }: { id: number; status: string }, { rejectWithValue }) => {
@@ -173,20 +174,21 @@ export const updateStatusThunk = createAsyncThunk(
       const response = await fetch(`${API_URL}/updateStatus/${id}`, {
         method: "PUT",
         headers: getAuthHeaders(),
-        body: JSON.stringify({ status }),
+        body: JSON.stringify({ status }), // Ensure the request matches the Transaction structure
         credentials: "include", // Include cookies in the request
       });
 
       if (!response.ok) throw new Error("Failed to update status");
-
-      return await response.json(); // Return the updated data
+ showToast("Transaction updated successfully!", "success");
+      return await response.json();  // Ensure the returned data matches the Transaction structure
     } catch (error) {
-      return rejectWithValue(error.message || "Failed to update status"); // Return the error message if it fails
+       showToast("Failed to update transaction", "error");
+      return rejectWithValue(error.message || "Failed to update status");
     }
   }
 );
 
-// Update Transact Thunk
+// 🔄 7. Update Transact
 export const updateTransactThunk = createAsyncThunk(
   "transactions/updateTransact",
   async ({ id, transact }: { id: number; transact: string }, { rejectWithValue }) => {
@@ -194,22 +196,22 @@ export const updateTransactThunk = createAsyncThunk(
       const response = await fetch(`${API_URL}/updateTransact/${id}`, {
         method: "PUT",
         headers: getAuthHeaders(),
-        body: JSON.stringify({ transact }),
+        body: JSON.stringify({ transact }), // Ensure the request matches the Transaction structure
         credentials: "include", // Include cookies in the request
       });
 
       if (!response.ok) throw new Error("Failed to update transact");
 
-      return await response.json(); // Return the updated data
+      return await response.json();  // Ensure the returned data matches the Transaction structure
     } catch (error) {
-      return rejectWithValue(error.message || "Failed to update transact"); // Return the error message if it fails
+      return rejectWithValue(error.message || "Failed to update transact");
     }
   }
 );
 
-// 🔁 6. Filter Transactions
+// 🔁 8. Filter Transactions
 export const filterTransactionsThunk = createAsyncThunk<
-  Transaction[], // Adjust this type if needed
+  Transaction[], // Adjust this type to match your `Transaction` interface
   { name?: string; dateFrom?: string; dateTo?: string },
   { rejectValue: string }
 >(
@@ -225,14 +227,18 @@ export const filterTransactionsThunk = createAsyncThunk<
 
       if (!response.ok) throw new Error("Failed to filter transactions");
 
-      const data = await response.json();
+      const data = await response.json(); // Ensure the data returned matches the Transaction structure
+
+      // Log the data to the console to inspect the result
+      console.log("Filtered Transactions Data:", data);
 
       return data;
     } catch (error: any) {
       const errorMessage = error?.message || "Unknown error";
       console.error("❌ Filter Error:", errorMessage);
       showToast(errorMessage, "error");
-      return rejectWithValue(errorMessage); // Return the error message as the payload
+      return rejectWithValue(errorMessage);
     }
   }
 );
+

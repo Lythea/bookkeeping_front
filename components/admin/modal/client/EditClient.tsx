@@ -4,35 +4,57 @@ import { useDispatch } from "react-redux";
 import { updateClientThunk } from "@/app/redux/slice/clientSlice";
 import { AppDispatch } from "@/app/redux/store";
 import { Dialog, Transition } from "@headlessui/react";
-import { Formik, Form, Field, ErrorMessage } from "formik";
+import { Formik, Form, Field, FieldArray, ErrorMessage } from "formik";
 import * as Yup from "yup";
 
 interface EditModalProps {
   isOpen: boolean;
   onClose: () => void;
-  client: Client | null; // 🟢 Accepts client data to edit
+  client: Client | null;
+}
+
+interface Business {
+  business_name: string;
+  line_of_business: string;
+  registered_address: string;
+  started_date: string;
+  tin: string;
+  zip_code: string;
 }
 
 interface Client {
-  id: number;
-  name: string;
-  phone: string;
-  address: string;
-  business_type: string; // ✅ Matches backend
-  business_name: string; // ✅ Matches backend
-  tin_id: string; // ✅ Matches backend
+  id?: number;
+  firstname: string;
+  lastname: string;
+  middlename: string | null;
+  birthday: string;
+  email: string | null;
+  contact_number: string | null;
+  business: Business[];
 }
 
-// ✅ Yup Validation Schema (Ensuring field names match backend)
 const validationSchema = Yup.object().shape({
-  name: Yup.string().required("Client name is required"),
-  phone: Yup.string()
-    .matches(/^[0-9]+$/, "Phone number must contain only digits")
-    .required("Phone is required"),
-  address: Yup.string().required("Address is required"),
-  business_type: Yup.string().required("Business type is required"),
-  business_name: Yup.string().required("Business name is required"),
-  tin_id: Yup.string().required("TIN ID is required"),
+  lastname: Yup.string().required("Last name is required"),
+  firstname: Yup.string().required("First name is required"),
+  middlename: Yup.string().required("Middle name is required"),
+  birthday: Yup.string().required("Birthday is required"),
+  email: Yup.string()
+    .email("Invalid email address")
+    .required("Email is required"),
+  contact_number: Yup.string()
+    .matches(/^[0-9]{10,12}$/, "Contact number must be between 10 to 12 digits")
+    .required("Contact number is required"),
+
+  business: Yup.array().of(
+    Yup.object().shape({
+      business_name: Yup.string().required("Business name is required"),
+      line_of_business: Yup.string().required("Line of business is required"),
+      registered_address: Yup.string().required("Address is required"),
+      started_date: Yup.string().required("Started date is required"),
+      tin: Yup.string().required("TIN is required"),
+      zip_code: Yup.string().required("Zip code is required"),
+    })
+  ),
 });
 
 export default function EditClientModal({
@@ -42,7 +64,8 @@ export default function EditClientModal({
 }: EditModalProps) {
   const dispatch = useDispatch<AppDispatch>();
   const router = useRouter();
-  if (!client) return null; // Prevents rendering if no client is selected
+
+  if (!client) return null;
 
   const handleSubmit = async (
     values: Client,
@@ -51,7 +74,6 @@ export default function EditClientModal({
       resetForm,
     }: { setSubmitting: (isSubmitting: boolean) => void; resetForm: () => void }
   ) => {
- 
     try {
       await dispatch(updateClientThunk(values)).unwrap();
       router.refresh();
@@ -66,7 +88,6 @@ export default function EditClientModal({
   return (
     <Transition appear show={isOpen} as="div">
       <Dialog as="div" className="relative z-50" onClose={onClose}>
-        {/* ✅ Updated Overlay Background */}
         <Transition.Child
           enter="transition-opacity duration-300"
           enterFrom="opacity-0"
@@ -87,125 +108,268 @@ export default function EditClientModal({
             leaveFrom="opacity-100 scale-100"
             leaveTo="opacity-0 scale-90"
           >
-            {/* ✅ Keep Form Background White */}
-            <Dialog.Panel className="w-full max-w-md bg-white shadow-lg rounded-lg p-6">
+            <Dialog.Panel className="w-full max-w-2xl bg-white shadow-lg rounded-lg p-6 max-h-[80vh] overflow-y-auto">
               <Dialog.Title className="text-lg font-semibold text-gray-900">
                 Edit Client
               </Dialog.Title>
 
-              {/* ✅ Formik Form with Pre-Filled Data */}
+              {/* Formik Form */}
               <Formik
                 initialValues={{
-                  id: client.id,
-                  name: client.name,
-                  phone: client.phone,
-                  address: client.address,
-                  business_type: client.business_type,
-                  business_name: client.business_name,
-                  tin_id: client.tin_id,
+                  id: client.id || 0,
+                  firstname: client.firstname,
+                  lastname: client.lastname,
+                  middlename: client.middlename || "",
+                  birthday: client.birthday,
+                  email: client.email || "",
+                  contact_number: client.contact_number || "",
+                  business: client.business || [], // Properly initialize with businesses if available
                 }}
                 validationSchema={validationSchema}
                 onSubmit={handleSubmit}
               >
-                {({ isSubmitting }) => (
+                {({ isSubmitting, values }) => (
                   <Form className="mt-4 space-y-4">
-                    <div>
-                      <label className="block text-gray-700">Client Name</label>
-                      <Field
-                        name="name"
-                        className="w-full px-4 py-2 border rounded focus:ring focus:ring-blue-300"
-                      />
-                      <ErrorMessage
-                        name="name"
-                        component="p"
-                        className="text-red-500 text-sm"
-                      />
+                    {/* Name and Date Fields */}
+                    <div className="grid grid-cols-3 gap-4">
+                      <div>
+                        <label className="block text-gray-700">Last Name</label>
+                        <Field
+                          name="lastname"
+                          className="w-full px-4 py-2 border rounded focus:ring focus:ring-blue-300"
+                        />
+                        <ErrorMessage
+                          name="lastname"
+                          component="p"
+                          className="text-red-500 text-sm"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-gray-700">
+                          First Name
+                        </label>
+                        <Field
+                          name="firstname"
+                          className="w-full px-4 py-2 border rounded focus:ring focus:ring-blue-300"
+                        />
+                        <ErrorMessage
+                          name="firstname"
+                          component="p"
+                          className="text-red-500 text-sm"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-gray-700">
+                          Middle Name
+                        </label>
+                        <Field
+                          name="middlename"
+                          className="w-full px-4 py-2 border rounded focus:ring focus:ring-blue-300"
+                        />
+                        <ErrorMessage
+                          name="middlename"
+                          component="p"
+                          className="text-red-500 text-sm"
+                        />
+                      </div>
                     </div>
 
-                    <div>
-                      <label className="block text-gray-700">Phone</label>
-                      <Field
-                        name="phone"
-                        className="w-full px-4 py-2 border rounded focus:ring focus:ring-blue-300"
-                      />
-                      <ErrorMessage
-                        name="phone"
-                        component="p"
-                        className="text-red-500 text-sm"
-                      />
+                    {/* Date of Birth and Email */}
+                    <div className="grid grid-cols-3 gap-4 mt-4">
+                      <div>
+                        <label className="block text-gray-700">Birthday</label>
+                        <Field
+                          name="birthday"
+                          type="date"
+                          className="w-full px-4 py-2 border rounded focus:ring focus:ring-blue-300"
+                        />
+                        <ErrorMessage
+                          name="birthday"
+                          component="p"
+                          className="text-red-500 text-sm"
+                        />
+                      </div>
+                      <div className="col-span-2">
+                        <label className="block text-gray-700">Email</label>
+                        <Field
+                          name="email"
+                          type="email"
+                          className="w-full px-4 py-2 border rounded focus:ring focus:ring-blue-300"
+                        />
+                        <ErrorMessage
+                          name="email"
+                          component="p"
+                          className="text-red-500 text-sm"
+                        />
+                      </div>
                     </div>
 
-                    <div>
-                      <label className="block text-gray-700">Address</label>
-                      <Field
-                        name="address"
-                        className="w-full px-4 py-2 border rounded focus:ring focus:ring-blue-300"
-                      />
-                      <ErrorMessage
-                        name="address"
-                        component="p"
-                        className="text-red-500 text-sm"
-                      />
+                    {/* Contact Number */}
+                    <div className="grid grid-cols-3 gap-4 mt-4">
+                      <div>
+                        <label className="block text-gray-700">
+                          Contact Number
+                        </label>
+                        <Field
+                          name="contact_number"
+                          className="w-full px-4 py-2 border rounded focus:ring focus:ring-blue-300"
+                        />
+                        <ErrorMessage
+                          name="contact_number"
+                          component="p"
+                          className="text-red-500 text-sm"
+                        />
+                      </div>
                     </div>
 
-                    <div>
-                      <label className="block text-gray-700">
-                        Business Type
-                      </label>
-                      <Field
-                        name="business_type"
-                        className="w-full px-4 py-2 border rounded focus:ring focus:ring-blue-300"
-                      />
-                      <ErrorMessage
-                        name="business_type"
-                        component="p"
-                        className="text-red-500 text-sm"
-                      />
-                    </div>
+                    {/* Business Details */}
+                    <FieldArray name="business">
+                      {({ push, remove }) => (
+                        <>
+                          {values.business.map((business, index) => (
+                            <div key={index} className="mt-4 space-y-4">
+                              <h3 className="font-semibold text-gray-700">
+                                Business {index + 1}
+                              </h3>
+                              <div className="grid grid-cols-3 gap-4">
+                                <div>
+                                  <label className="block text-gray-700">
+                                    Business Name
+                                  </label>
+                                  <Field
+                                    name={`business[${index}].business_name`}
+                                    className="w-full px-4 py-2 border rounded focus:ring focus:ring-blue-300"
+                                  />
+                                  <ErrorMessage
+                                    name={`business[${index}].business_name`}
+                                    component="p"
+                                    className="text-red-500 text-sm"
+                                  />
+                                </div>
+                                <div>
+                                  <label className="block text-gray-700">
+                                    Line of Business
+                                  </label>
+                                  <Field
+                                    name={`business[${index}].line_of_business`}
+                                    className="w-full px-4 py-2 border rounded focus:ring focus:ring-blue-300"
+                                  />
+                                  <ErrorMessage
+                                    name={`business[${index}].line_of_business`}
+                                    component="p"
+                                    className="text-red-500 text-sm"
+                                  />
+                                </div>
+                                <div>
+                                  <label className="block text-gray-700">
+                                    Zip Code
+                                  </label>
+                                  <Field
+                                    name={`business[${index}].zip_code`}
+                                    className="w-full px-4 py-2 border rounded focus:ring focus:ring-blue-300"
+                                  />
+                                  <ErrorMessage
+                                    name={`business[${index}].zip_code`}
+                                    component="p"
+                                    className="text-red-500 text-sm"
+                                  />
+                                </div>
+                              </div>
 
-                    <div>
-                      <label className="block text-gray-700">
-                        Business Name
-                      </label>
-                      <Field
-                        name="business_name"
-                        className="w-full px-4 py-2 border rounded focus:ring focus:ring-blue-300"
-                      />
-                      <ErrorMessage
-                        name="business_name"
-                        component="p"
-                        className="text-red-500 text-sm"
-                      />
-                    </div>
+                              {/* Add the TIN field for each business */}
+                              <div className="grid grid-cols-3 gap-4">
+                                <div>
+                                  <label className="block text-gray-700">
+                                    TIN
+                                  </label>
+                                  <Field
+                                    name={`business[${index}].tin`}
+                                    className="w-full px-4 py-2 border rounded focus:ring focus:ring-blue-300"
+                                  />
+                                  <ErrorMessage
+                                    name={`business[${index}].tin`}
+                                    component="p"
+                                    className="text-red-500 text-sm"
+                                  />
+                                </div>
+                                <div>
+                                  <label className="block text-gray-700">
+                                    Registered Address
+                                  </label>
+                                  <Field
+                                    name={`business[${index}].registered_address`}
+                                    className="w-full px-4 py-2 border rounded focus:ring focus:ring-blue-300"
+                                  />
+                                  <ErrorMessage
+                                    name={`business[${index}].registered_address`}
+                                    component="p"
+                                    className="text-red-500 text-sm"
+                                  />
+                                </div>
+                                <div>
+                                  <label className="block text-gray-700">
+                                    Started Date
+                                  </label>
+                                  <Field
+                                    name={`business[${index}].started_date`}
+                                    type="date"
+                                    className="w-full px-4 py-2 border rounded focus:ring focus:ring-blue-300"
+                                  />
+                                  <ErrorMessage
+                                    name={`business[${index}].started_date`}
+                                    component="p"
+                                    className="text-red-500 text-sm"
+                                  />
+                                </div>
+                              </div>
 
-                    <div>
-                      <label className="block text-gray-700">TIN ID</label>
-                      <Field
-                        name="tin_id"
-                        className="w-full px-4 py-2 border rounded focus:ring focus:ring-blue-300"
-                      />
-                      <ErrorMessage
-                        name="tin_id"
-                        component="p"
-                        className="text-red-500 text-sm"
-                      />
-                    </div>
+                              <div className="mt-2">
+                                <button
+                                  type="button"
+                                  onClick={() => remove(index)}
+                                  className="text-red-500 hover:text-red-700"
+                                >
+                                  Remove Business
+                                </button>
+                              </div>
+                            </div>
+                          ))}
+                          <div className="mt-4">
+                            <button
+                              type="button"
+                              onClick={() =>
+                                push({
+                                  business_name: "",
+                                  line_of_business: "",
+                                  registered_address: "",
+                                  started_date: "",
+                                  tin: "",
+                                  zip_code: "",
+                                })
+                              }
+                              className="text-blue-500 hover:text-blue-700"
+                            >
+                              Add New Business
+                            </button>
+                          </div>
+                        </>
+                      )}
+                    </FieldArray>
 
-                    {/* ✅ Buttons */}
-                    <div className="flex justify-end space-x-2 mt-4">
+                    <div className="mt-4 flex justify-end space-x-4">
                       <button
                         type="button"
                         onClick={onClose}
-                        className="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 transition"
+                        className="px-6 py-2 border rounded bg-gray-300 hover:bg-gray-400"
                       >
                         Cancel
                       </button>
                       <button
                         type="submit"
-                        className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
                         disabled={isSubmitting}
+                        className="px-6 py-2 border rounded bg-blue-600 text-white hover:bg-blue-700"
                       >
-                        {isSubmitting ? "Updating..." : "Update Client"}
+                        {isSubmitting ? "Submitting..." : "Submit"}
                       </button>
                     </div>
                   </Form>

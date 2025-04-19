@@ -1,307 +1,284 @@
 "use client";
-
-import { useState, useRef } from "react";
+import { useRouter } from "next/navigation";
+import { useState, useMemo } from "react";
 import DataTable from "react-data-table-component";
-import { CSVLink } from "react-csv";
-import { HiDotsVertical } from "react-icons/hi";
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch } from "react-redux";
 import { AppDispatch } from "@/app/redux/store";
-import { jsPDF } from "jspdf";
-import generateReceiptPDF from "@/components/admin/export/transactionreceipt"; // Import the generateReceiptPDF function
-import ViewTransactionModal from "@/components/admin/modal/transaction/ViewTransaction"; // Import the generateReceiptPDF function
-import HistoryInfo from "@/components/admin/modal/transaction/transactionhistoryFilter";
+import { HiDotsVertical } from "react-icons/hi";
 
-import {
-  addTransactionThunk,
-  deleteTransactionThunk,
-} from "@/app/redux/services/transactionService"; // <-- Update this to your correct path
-
-import Status from "@/components/admin/modal/transaction/Status";
-
+import AddModal from "@/components/admin/modal/transaction/AddModal";
+import { deleteTransactionThunk } from "@/app/redux/services/transactionService";
+import StatusModal from "@/components/admin/modal/transaction/Status";
+import ViewTransaction from "@/components/admin/modal/transaction/ViewTransaction";
+import TransactionHistory from "@/components/admin/modal/transaction/transactionhistoryFilter";
 interface Inquiry {
   name: string;
   price: string;
   service: string;
 }
-
 interface Transaction {
   id: number;
-  address: string;
-  contact: string;
-  created_at: string;
-  date: string;
-  email: string;
-  inquiries: Inquiry[];
-  name: string;
+  name: string; // Full name of the client
   status: string;
-  transact: string;
-  updated_at: string;
+  date: string;
+  inquiries: Inquiry[];
+  tin_id: string;
+  business_name: string;
 }
 
 interface Props {
-  transactions: Transaction[];
+  transactions: { transactions: Transaction[]; clients: any; services: any };
 }
 
 export default function TransactionsLayout({ transactions }: Props) {
   const dispatch = useDispatch<AppDispatch>();
+  const [statusModalTransaction, setStatusModalTransaction] =
+    useState<Transaction | null>(null);
+  const [viewTransaction, setViewTransaction] = useState<Transaction | null>(
+    null
+  );
+  const [isHistoryModalOpen, setIsHistoryModalOpen] = useState<boolean>(false); // Add state for history modal
 
-  const [searchQuery, setSearchQuery] = useState("");
+  console.log(transactions.transactions);
+  const router = useRouter();
   const [menuOpen, setMenuOpen] = useState<number | null>(null);
   const [selectedTransaction, setSelectedTransaction] =
     useState<Transaction | null>(null);
-  const [showHistoryModal, setShowHistoryModal] = useState(false);
+  const [searchQuery, setSearchQuery] = useState<string>("");
+  const [isAddModalOpen, setIsAddModalOpen] = useState<boolean>(false);
+  const [confirmDelete, setConfirmDelete] = useState<number | null>(null);
 
-  const [showModal, setShowModal] = useState(false);
-  const [modalTransaction, setModalTransaction] = useState<Transaction | null>(
-    null
-  );
-  const [modalType, setModalType] = useState<"status" | "transact" | null>(
-    null
-  );
-  const completeTransactionData = transactions.flatMap((transaction) => {
-    // Flattening the inquiries into a string
-    const inquiriesString = transaction.inquiries
-      .map(
-        (inquiry) => `${inquiry.name} (${inquiry.service}): ${inquiry.price}`
-      )
-      .join(", "); // You can customize the format of inquiries here
+  const toggleMenu = (id: number) => {
+    setMenuOpen(menuOpen === id ? null : id);
+  };
 
-    // Return an array with each transaction's information
-    return {
-      id: transaction.id,
-      name: transaction.name,
-      address: transaction.address,
-      contact: transaction.contact,
-      email: transaction.email,
-      created_at: transaction.created_at,
-      date: transaction.date,
-      status: transaction.status,
-      transact: transaction.transact,
-      inquiries: inquiriesString, // Display inquiries as a single string
-      updated_at: transaction.updated_at,
-    };
-  });
+  const handleDeleteClient = async (row: any) => {
+    setConfirmDelete(row.id);
+    setMenuOpen(null);
+  };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "Pending":
-        return "bg-yellow-400 text-yellow-800";
-      case "Completed":
-        return "bg-green-400 text-green-800";
-      case "Cancelled":
-        return "bg-red-400 text-red-800";
-      default:
-        return "bg-gray-400 text-gray-800";
+  const confirmDeletion = async () => {
+    if (confirmDelete !== null) {
+      await dispatch(deleteTransactionThunk(confirmDelete));
+      setConfirmDelete(null);
+      router.refresh();
     }
   };
 
-  const getTransactColor = (transact: string) => {
-    switch (transact) {
-      case "In Progress":
-        return "bg-blue-400 text-blue-800";
-      case "Completed":
-        return "bg-green-400 text-green-800";
-      case "Failed":
-        return "bg-red-400 text-red-800";
-      default:
-        return "bg-gray-400 text-gray-800";
-    }
+  const cancelDeletion = () => {
+    setConfirmDelete(null);
+  };
+  const handleHistoryModalOpen = () => {
+    setIsHistoryModalOpen(true);
+  };
+  const handleStatusClick = (transaction: Transaction) => {
+    setStatusModalTransaction(transaction);
+    setMenuOpen(null);
+  };
+  const handleViewTransaction = (transaction: Transaction) => {
+    setViewTransaction(transaction);
+    setMenuOpen(null);
   };
 
-  const toggleMenu = (
-    id: number,
-    buttonRef: React.RefObject<HTMLButtonElement | null>
-  ) => {
-    setMenuOpen((prev) => (prev === id ? null : id));
+  const tableData = useMemo(() => {
+    if (!Array.isArray(transactions.transactions)) return [];
 
-    if (buttonRef.current) {
-      const rect = buttonRef.current.getBoundingClientRect();
-      const dropdown = document.getElementById(`dropdown-${id}`);
-      if (dropdown) {
-        dropdown.style.top = `${rect.bottom + window.scrollY}px`;
-        dropdown.style.left = `${rect.left + window.scrollX}px`;
-      }
-    }
-  };
-  const handleModalOpen = (row: Transaction, type: "status" | "transact") => {
-    setModalTransaction(row);
-    setModalType(type);
-    setShowModal(true);
-  };
+    const filteredData = transactions.transactions.filter((txn: Transaction) =>
+      txn.name.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+    return filteredData.map((txn: Transaction) => ({
+      id: txn.id,
+      name: txn.name,
+      status: txn.status,
+      date: txn.date,
+      inquiries: txn.inquiries,
+      inquiriesDisplay: txn.inquiries
+        .map(
+          (inquiry: Inquiry) =>
+            `${inquiry.service}: ${inquiry.name} - ₱${inquiry.price}`
+        )
+        .join(", "),
+      price: txn.inquiries
+        .map((inquiry: Inquiry) => `₱${inquiry.price}`)
+        .join(", "),
+      business_name: txn.business_name, // ➕ Added
+      tin_id: txn.tin_id, // ➕ Added
+    }));
+  }, [transactions.transactions, searchQuery]);
 
-  const handleModalClose = () => {
-    setShowModal(false);
-    setModalTransaction(null);
-    setModalType(null);
-  };
   const columns = [
     {
-      name: "Name",
-      selector: (row: Transaction) => row.name,
+      name: "Client",
+      selector: (row: any) => row.name,
       sortable: true,
     },
     {
-      name: "Email",
-      selector: (row: Transaction) => row.email,
+      name: "TIN ID",
+      selector: (row: any) => row.tin_id,
       sortable: true,
     },
     {
-      name: "Contact",
-      selector: (row: Transaction) => row.contact,
+      name: "Business Name",
+      selector: (row: any) => row.business_name,
       sortable: true,
     },
+
     {
-      name: "Address",
-      selector: (row: Transaction) => row.address,
+      name: "Inquiries",
+      selector: (row: any) => row.inquiriesDisplay || "No inquiries",
       sortable: true,
-    },
-    {
-      name: "Date",
-      selector: (row: Transaction) => row.date,
-      sortable: true,
+      wrap: true,
     },
     {
       name: "Status",
-      cell: (row: Transaction) => (
-        <button
-          onClick={() => handleModalOpen(row, "status")}
-          className={`px-4 py-2 rounded-md font-semibold ${getStatusColor(
-            row.status
-          )}`}
-        >
-          {row.status}
-        </button>
-      ),
-      sortable: true,
-    },
-    {
-      name: "Transact",
-      cell: (row: Transaction) => (
-        <button
-          onClick={() => handleModalOpen(row, "transact")}
-          className={`px-4 py-2 rounded-md font-semibold ${getTransactColor(
-            row.transact
-          )}`}
-        >
-          {row.transact}
-        </button>
-      ),
-      sortable: true,
-    },
+      selector: (row: any) => row.status,
+      cell: (row: any) => {
+        const status = row.status.toLowerCase();
+        const statusColor =
+          status === "pending"
+            ? "bg-yellow-100 text-yellow-800"
+            : status === "completed"
+            ? "bg-blue-100 text-blue-800"
+            : "bg-red-100 text-red-800";
 
-    {
-      name: "Actions",
-      cell: (row: Transaction) => {
-        const buttonRef = useRef<HTMLButtonElement>(null);
         return (
-          <div className="relative">
-            <button
-              ref={buttonRef}
-              onClick={() => toggleMenu(row.id, buttonRef)}
-              className="text-gray-600 hover:text-gray-900"
-            >
-              <HiDotsVertical size={20} />
-            </button>
-            {menuOpen === row.id && (
-              <div
-                id={`dropdown-${row.id}`}
-                className="fixed min-w-[100px] bg-white shadow-md rounded-md z-50"
-              >
-                <button
-                  className="block w-full text-left px-3 py-2 hover:bg-gray-200 text-blue-500"
-                  onClick={() => {
-                    setModalTransaction(row); // Set the selected transaction
-                    setShowModal(true); // Show the modal
-                    setMenuOpen(null); // Close the menu
-                  }}
-                >
-                  View
-                </button>
-                <button
-                  className="block w-full text-left px-3 py-2 hover:bg-gray-200 text-red-500"
-                  onClick={() => {
-                    dispatch(deleteTransactionThunk(row.id));
-                    setMenuOpen(null); // Close the menu
-                  }}
-                >
-                  Delete
-                </button>
-              </div>
-            )}
-          </div>
+          <button
+            onClick={() => handleStatusClick(row)}
+            className={`px-2 py-1 rounded text-sm font-semibold ${statusColor}`}
+          >
+            {row.status.toUpperCase()}
+          </button>
         );
       },
     },
+
+    {
+      name: "Date",
+      selector: (row: any) => row.date,
+    },
+    {
+      name: "Actions",
+      cell: (row: any) => (
+        <div className="relative">
+          <button
+            onClick={() => toggleMenu(row.id)}
+            className="text-gray-600 hover:text-gray-900"
+          >
+            <HiDotsVertical size={20} />
+          </button>
+          {menuOpen === row.id && (
+            <div className="fixed min-w-[100px] bg-white shadow-md rounded-md z-50">
+              <button
+                className="block w-full text-left px-3 py-2 hover:bg-blue-200 text-blue-500"
+                onClick={() => handleViewTransaction(row)}
+              >
+                View Transaction
+              </button>
+
+              <button
+                className="block w-full text-left px-3 py-2 hover:bg-red-200 text-red-500"
+                onClick={() => handleDeleteClient(row)}
+              >
+                Delete
+              </button>
+            </div>
+          )}
+        </div>
+      ),
+      wrap: false,
+    },
   ];
 
-  const filteredData = transactions.filter(
-    (item) => item.name.toLowerCase().includes(searchQuery.toLowerCase())
-    // item.date.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    // item.status.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    // item.address.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    // item.contact.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    // item.email.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
   return (
-    <div className="p-6 bg-white shadow-md rounded-md">
-      <h2 className="text-2xl font-semibold mb-4">Transaction List</h2>
+    <div className="p-4 space-y-4">
+      <h1 className="text-xl font-bold">Transactions</h1>
 
-      <div className="mb-4 flex items-center space-x-4">
+      {/* Search and Add Button */}
+      <div className="mb-4 flex items-center justify-between">
         <input
           type="text"
-          placeholder="Search transactions..."
-          className="w-1/3 p-2 border rounded"
+          placeholder="Search by client name..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
+          className="px-4 py-2 border border-gray-300 rounded-md w-1/4"
         />
-
         <div className="ml-auto flex space-x-4">
+          {" "}
+          {/* Add ml-auto to push buttons to the right */}
           <button
-            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-            onClick={() => setShowHistoryModal(true)} // Open History Modal
+            onClick={() => setIsAddModalOpen(true)}
+            className="px-4 py-2 bg-blue-600 text-white rounded-md"
+          >
+            Add Transaction
+          </button>
+          <button
+            onClick={handleHistoryModalOpen} // Trigger history modal
+            className="px-4 py-2 bg-blue-600 text-white rounded-md"
           >
             Transaction History
           </button>
-
-          <CSVLink
-            data={completeTransactionData}
-            filename="transaction-list.csv"
-            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-          >
-            Export Excel
-          </CSVLink>
         </div>
       </div>
 
-      {/* Data Table */}
       <DataTable
         columns={columns}
-        data={filteredData}
+        data={tableData}
         pagination
-        striped
         highlightOnHover
-        paginationPerPage={10}
+        striped
+        responsive
       />
 
-      {showModal && modalTransaction && modalType && (
-        <Status
-          transaction={modalTransaction}
-          onClose={handleModalClose}
-          modalType={modalType}
+      {viewTransaction && (
+        <ViewTransaction
+          clients={transactions.clients}
+          transaction={viewTransaction}
+          onClose={() => setViewTransaction(null)}
         />
       )}
-      {showModal && modalTransaction && (
-        <ViewTransactionModal
-          transaction={modalTransaction}
-          onClose={handleModalClose}
+      {isHistoryModalOpen && (
+        <TransactionHistory
+          clients={transactions.clients} // Pass clients to modal
+          transactions={transactions.transactions}
+          onClose={() => setIsHistoryModalOpen(false)} // Close the modal
         />
       )}
-      {showHistoryModal && (
-        <HistoryInfo
-          onClose={() => setShowHistoryModal(false)} // Close modal handler
-          transactionNames={transactions.map((transaction) => transaction.name)} // Pass all transaction names
+      {isAddModalOpen && (
+        <AddModal
+          onClose={() => setIsAddModalOpen(false)}
+          clients={transactions.clients}
+          services={transactions.services}
+          onSuccess={() => router.refresh()}
         />
+      )}
+      {statusModalTransaction && (
+        <StatusModal
+          transaction={statusModalTransaction}
+          onClose={() => setStatusModalTransaction(null)}
+        />
+      )}
+
+      {/* Confirm Delete Modal */}
+      {confirmDelete && (
+        <div className="fixed inset-0 bg-gray-500 bg-opacity-50 flex justify-center items-center z-50">
+          <div className="bg-white p-4 rounded-md shadow-lg">
+            <p>Are you sure you want to delete this transaction?</p>
+            <div className="mt-4 flex justify-between">
+              <button
+                onClick={cancelDeletion}
+                className="px-4 py-2 bg-gray-300 text-gray-800 rounded-md"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmDeletion}
+                className="px-4 py-2 bg-red-600 text-white rounded-md"
+              >
+                Confirm
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

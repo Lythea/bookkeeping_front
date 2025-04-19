@@ -2,15 +2,26 @@
 import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
 import { addClient, updateClient, deleteClient } from "@/app/redux/services/clientService";
 
-// Define the Client interface
-interface Client {
-  id: number;
-  name: string;
-  phone: string;
-  address: string;
-  business_type: string;
+// Define the Business interface
+export interface Business {
   business_name: string;
-  tin_id: string;
+  line_of_business: string;
+  registered_address: string;
+  started_date: string;  // Added started_date
+  tin: string;
+  zip_code: string;
+}
+
+// Define the Client interface, including the Business type
+export interface Client {
+  id?: number;
+  firstname: string;
+  lastname: string;
+  middlename: string | null;
+  birthday: string;
+  email: string | null;
+  contact_number: string | null;
+  business: Business[];  // Updated business type
 }
 
 // Define initial state
@@ -19,7 +30,7 @@ interface ClientState {
   client?: Client | null;
   loading: boolean;
   error?: string | null;
-  reload: boolean; // Add reload state to trigger a refresh
+  reload: boolean;
 }
 
 const initialState: ClientState = {
@@ -27,7 +38,7 @@ const initialState: ClientState = {
   client: null,
   loading: false,
   error: null,
-  reload: false, // Initial value is false, indicating no reload is needed
+  reload: false,
 };
 
 // Async Thunks (Wrapped with createAsyncThunk)
@@ -91,11 +102,10 @@ const clientSlice = createSlice({
         (action) => action.type.endsWith("/rejected"),
         (state, action) => {
           state.loading = false; // Set loading to false when any async action is rejected
-      
         }
       );
   },
 });
 
-export const { triggerReload, resetReload } = clientSlice.actions; // Export triggerReload action
+export const { triggerReload, resetReload } = clientSlice.actions;
 export default clientSlice.reducer;

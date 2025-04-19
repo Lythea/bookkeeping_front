@@ -7,6 +7,7 @@ import { useDispatch } from "react-redux";
 import { AppDispatch } from "@/app/redux/store";
 import { addServiceThunk } from "@/app/redux/slice/serviceSlice"; // Example for redux action
 import { useRouter } from "next/navigation";
+
 interface AddModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -44,7 +45,6 @@ const validationSchema = Yup.object().shape({
 
 export default function AddServiceModal({ isOpen, onClose }: AddModalProps) {
   const dispatch = useDispatch<AppDispatch>();
-
   const router = useRouter();
 
   const handleSubmit = async (
@@ -60,28 +60,54 @@ export default function AddServiceModal({ isOpen, onClose }: AddModalProps) {
       // Append the service name
       formData.append("service", values.service);
 
-      // Loop through the forms array and append each form's data
-      values.forms.forEach((form, index) => {
-        formData.append(`forms[${index}][name]`, form.name);
-        if (form.file && form.file instanceof File) {
-          formData.append(`forms[${index}][file]`, form.file); // Properly append file
-        } else {
-          formData.append(`forms[${index}][file]`, ""); // Optional: handle empty file case
-        }
-        formData.append(`forms[${index}][price]`, form.price);
-        formData.append(`forms[${index}][description]`, form.description);
-      });
+      // Check if values.forms is valid and has data
+      if (Array.isArray(values.forms) && values.forms.length > 0) {
+        // Loop through the forms array and append each form's data
+        values.forms.forEach((form, index) => {
+          formData.append(`forms[${index}][name]`, form.name);
 
-      // Dispatch the action with FormData
+          // Only append the file if it's present and is a valid file
+          if (form.file && form.file instanceof File) {
+            // Log specific file details for debugging
+            console.log(`File Details for form[${index}]:`);
+            console.log(`Name: ${form.file.name}`);
+            console.log(`Size: ${form.file.size} bytes`);
+            console.log(`Type: ${form.file.type}`);
+            console.log(`Last Modified: ${new Date(form.file.lastModified)}`);
+
+            formData.append(`forms[${index}][file]`, form.file); // Append the file correctly
+          }
+
+          formData.append(`forms[${index}][price]`, form.price);
+          formData.append(`forms[${index}][description]`, form.description);
+        });
+      } else {
+        console.error("❌ No forms data available in values.forms");
+        throw new Error("No forms data available");
+      }
+
+      // Log FormData for debugging purposes
+      for (let pair of formData.entries()) {
+        console.log(
+          `${pair[0]}: ${pair[1] instanceof File ? "File" : pair[1]}`
+        );
+      }
+
+      // Dispatch the action with FormData and await the result
       await dispatch(addServiceThunk(formData)).unwrap();
+
+      // After successful submission, refresh the page and reset the form
       router.refresh();
       resetForm(); // Clear the form after submission
-      onClose(); // Close modal
+      onClose(); // Close the modal
     } catch (err) {
       console.error("❌ Failed to add service:", err);
+      alert(
+        "There was an error while submitting the service. Please try again."
+      );
+    } finally {
+      setSubmitting(false); // Ensure submission state is reset, regardless of success or failure
     }
-
-    setSubmitting(false);
   };
 
   return (
@@ -173,18 +199,21 @@ export default function AddServiceModal({ isOpen, onClose }: AddModalProps) {
                                   </label>
                                   <input
                                     type="file"
-                                    name={`forms[0].file`} // Adjust this according to the index if using FieldArray
+                                    name={`forms[${index}].file`} // Adjusted to index dynamically
                                     onChange={(event) => {
-                                      // Manually set the file value in Formik
+                                      // Manually set the file value in Formik for dynamic index
                                       const file = event.target.files
                                         ? event.target.files[0]
                                         : null;
-                                      setFieldValue(`forms[0].file`, file); // Set file directly
+                                      setFieldValue(
+                                        `forms[${index}].file`,
+                                        file
+                                      ); // Set file dynamically
                                     }}
                                     className="w-full px-4 py-2 border rounded focus:ring focus:ring-blue-300"
                                   />
                                   <ErrorMessage
-                                    name={`forms[0].file`}
+                                    name={`forms[${index}].file`}
                                     component="p"
                                     className="text-red-500 text-sm"
                                   />
@@ -226,7 +255,7 @@ export default function AddServiceModal({ isOpen, onClose }: AddModalProps) {
                               onClick={() =>
                                 arrayHelpers.push({
                                   name: "",
-                                  file: "",
+                                  file: null,
                                   price: "",
                                   description: "",
                                 })

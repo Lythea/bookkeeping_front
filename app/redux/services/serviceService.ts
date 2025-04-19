@@ -44,24 +44,37 @@ export const getServiceThunk = createAsyncThunk("services/get", async (id: numbe
     throw error;
   }
 });
-
-// Add a service (supports FormData)
 export const addServiceThunk = createAsyncThunk(
   "services/add",
   async (formData: FormData, { rejectWithValue }) => {
     try {
+      console.log("Sending FormData to the API:");
+      for (let [key, value] of formData.entries()) {
+        console.log(`${key}:`, value instanceof File ? "File" : value);
+      }
+
+      const token = cookies.get("authToken");
+      if (!token) throw new Error("User is not authenticated");
+
       const response = await fetch(API_URL, {
         method: "POST",
-        headers: getAuthHeaders(),
-        body: formData, // FormData for file upload support
-        credentials: "include", // Include cookies in the request
+        headers: {
+          Authorization: `Bearer ${token}`,
+          // Do NOT manually set "Content-Type" here
+        },
+        body: formData,
+        credentials: "include",
       });
 
-      if (!response.ok) throw new Error("Failed to add service");
-
+      if (!response.ok) {
+        const errorResponse = await response.json();
+        console.error("Validation error:", errorResponse);
+        return rejectWithValue(errorResponse);
+      }
+      showToast("Service added successfully","success")
       return response.json();
     } catch (error) {
-      console.error("Error in addServiceThunk:", error); // Log the error if any
+      console.error("Error in addServiceThunk:", error);
       return rejectWithValue(error instanceof Error ? error.message : "Unknown error");
     }
   }
