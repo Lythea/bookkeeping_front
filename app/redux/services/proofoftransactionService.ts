@@ -80,7 +80,7 @@ export const addProofOfTransaction = async (proofOfTransaction: Omit<ProofOfTran
   }
 };
 
-// Update a proof of transaction by ID
+
 export const updateProofOfTransaction = async (proofOfTransaction: ProofOfTransaction) => {
   try {
     const response = await fetch(`${API_URL}/${proofOfTransaction.id}`, {
