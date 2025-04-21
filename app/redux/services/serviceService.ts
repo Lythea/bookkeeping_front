@@ -81,10 +81,17 @@ export const addServiceThunk = createAsyncThunk(
 );
 
 export const updateServiceThunk = createAsyncThunk("services/update", async (service: any) => {
+  console.log(service)
   try {
+          const token = cookies.get("authToken");
+      if (!token) throw new Error("User is not authenticated");
+
     const response = await fetch(`${API_URL}/${service.get("service_id")}`, {
       method: "POST",
-      headers: getAuthHeaders(),
+         headers: {
+          Authorization: `Bearer ${token}`,
+          // Do NOT manually set "Content-Type" here
+        },
       body: service, // Send FormData directly
       credentials: "include", // Include cookies in the request
     });

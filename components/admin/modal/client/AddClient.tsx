@@ -154,43 +154,49 @@ export default function AddModal({ isOpen, onClose }: AddModalProps) {
                 {({ isSubmitting, setFieldValue, values }) => (
                   <Form className="mt-4 space-y-4">
                     {/* Personal Information Fields */}
-                    <div>
-                      <label className="block text-gray-700">First Name</label>
-                      <Field
-                        name="firstname"
-                        className="w-full px-4 py-2 border rounded focus:ring focus:ring-blue-300"
-                      />
-                      <ErrorMessage
-                        name="firstname"
-                        component="p"
-                        className="text-red-500 text-sm"
-                      />
-                    </div>
+                    <div className="flex gap-4">
+                      <div className="w-1/3">
+                        <label className="block text-gray-700">Last Name</label>
+                        <Field
+                          name="lastname"
+                          className="w-full px-4 py-2 border rounded focus:ring focus:ring-blue-300"
+                        />
+                        <ErrorMessage
+                          name="lastname"
+                          component="p"
+                          className="text-red-500 text-sm"
+                        />
+                      </div>
 
-                    <div>
-                      <label className="block text-gray-700">Last Name</label>
-                      <Field
-                        name="lastname"
-                        className="w-full px-4 py-2 border rounded focus:ring focus:ring-blue-300"
-                      />
-                      <ErrorMessage
-                        name="lastname"
-                        component="p"
-                        className="text-red-500 text-sm"
-                      />
-                    </div>
+                      <div className="w-1/3">
+                        <label className="block text-gray-700">
+                          First Name
+                        </label>
+                        <Field
+                          name="firstname"
+                          className="w-full px-4 py-2 border rounded focus:ring focus:ring-blue-300"
+                        />
+                        <ErrorMessage
+                          name="firstname"
+                          component="p"
+                          className="text-red-500 text-sm"
+                        />
+                      </div>
 
-                    <div>
-                      <label className="block text-gray-700">Middle Name</label>
-                      <Field
-                        name="middlename"
-                        className="w-full px-4 py-2 border rounded focus:ring focus:ring-blue-300"
-                      />
-                      <ErrorMessage
-                        name="middlename"
-                        component="p"
-                        className="text-red-500 text-sm"
-                      />
+                      <div className="w-1/3">
+                        <label className="block text-gray-700">
+                          Middle Name
+                        </label>
+                        <Field
+                          name="middlename"
+                          className="w-full px-4 py-2 border rounded focus:ring focus:ring-blue-300"
+                        />
+                        <ErrorMessage
+                          name="middlename"
+                          component="p"
+                          className="text-red-500 text-sm"
+                        />
+                      </div>
                     </div>
 
                     <div>
@@ -310,10 +316,58 @@ export default function AddModal({ isOpen, onClose }: AddModalProps) {
                                 <label className="block text-gray-700">
                                   TIN
                                 </label>
-                                <Field
-                                  name={`business[${index}].tin`}
-                                  className="w-full px-4 py-2 border rounded focus:ring focus:ring-blue-300"
-                                />
+                                <Field name={`business[${index}].tin`}>
+                                  {({ field, form }) => {
+                                    const formatTIN = (value) => {
+                                      // Remove non-alphanumerics and limit to 12 characters
+                                      const cleaned = value
+                                        .replace(/[^a-zA-Z0-9]/g, "")
+                                        .slice(0, 12);
+                                      return (
+                                        cleaned.match(/.{1,3}/g)?.join("-") ||
+                                        ""
+                                      );
+                                    };
+
+                                    const handleChange = (e) => {
+                                      const cleaned = e.target.value
+                                        .replace(/[^a-zA-Z0-9]/g, "")
+                                        .slice(0, 12);
+                                      const formatted = formatTIN(cleaned);
+                                      form.setFieldValue(
+                                        `business[${index}].tin`,
+                                        formatted
+                                      );
+                                    };
+
+                                    const handleBlur = () => {
+                                      let cleaned = field.value.replace(
+                                        /[^a-zA-Z0-9]/g,
+                                        ""
+                                      );
+                                      if (cleaned.length < 12) {
+                                        cleaned =
+                                          cleaned +
+                                          "0".repeat(12 - cleaned.length);
+                                      }
+                                      const formatted = formatTIN(cleaned);
+                                      form.setFieldValue(
+                                        `business[${index}].tin`,
+                                        formatted
+                                      );
+                                    };
+
+                                    return (
+                                      <input
+                                        {...field}
+                                        className="w-full px-4 py-2 border rounded focus:ring focus:ring-blue-300"
+                                        onChange={handleChange}
+                                        onBlur={handleBlur}
+                                        value={field.value}
+                                      />
+                                    );
+                                  }}
+                                </Field>
                                 <ErrorMessage
                                   name={`business[${index}].tin`}
                                   component="p"

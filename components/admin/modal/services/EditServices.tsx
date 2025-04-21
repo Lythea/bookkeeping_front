@@ -27,14 +27,8 @@ const validationSchema = Yup.object().shape({
   forms: Yup.array().of(
     Yup.object().shape({
       name: Yup.string().required("Form name is required"),
-      file: Yup.mixed()
-        .nullable()
-        .required("File is required")
-        .test("fileType", "Must be a valid file", (value) => {
-          return value instanceof File || value === null;
-        }),
+      file: Yup.mixed().nullable(),
       price: Yup.string().required("Price is required"),
-      description: Yup.string().required("Description is required"),
     })
   ),
 });
@@ -66,7 +60,6 @@ export default function EditServiceModal({
         formData.append(`forms[${index}][name]`, form.name);
 
         if (form.file && form.file instanceof File) {
- 
           formData.append(`forms[${index}][file]`, form.file);
         } else if (!form.file) {
           formData.append(`forms[${index}][file]`, "");
@@ -75,8 +68,6 @@ export default function EditServiceModal({
         formData.append(`forms[${index}][price]`, form.price);
         formData.append(`forms[${index}][description]`, form.description);
       });
-
-
 
       await dispatch(updateServiceThunk(formData)).unwrap();
       router.refresh();
@@ -120,7 +111,7 @@ export default function EditServiceModal({
                 enableReinitialize={true} // Allow reinitialization of form values
                 initialValues={{
                   forms: serviceToEdit?.forms || [
-                    { name: "", file: null, price: "", description: "" },
+                    { name: "", file: null, price: "", description: "N/A" },
                   ], // Ensure fallback if serviceToEdit is null
                 }}
                 validationSchema={validationSchema}
@@ -186,21 +177,6 @@ export default function EditServiceModal({
                                   />
                                   <ErrorMessage
                                     name={`forms[${index}].price`}
-                                    component="p"
-                                    className="text-red-500 text-sm"
-                                  />
-                                </div>
-
-                                <div>
-                                  <label className="block text-gray-700">
-                                    Description
-                                  </label>
-                                  <Field
-                                    name={`forms[${index}].description`}
-                                    className="w-full px-4 py-2 border rounded focus:ring focus:ring-blue-300"
-                                  />
-                                  <ErrorMessage
-                                    name={`forms[${index}].description`}
                                     component="p"
                                     className="text-red-500 text-sm"
                                   />

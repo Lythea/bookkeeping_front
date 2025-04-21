@@ -266,21 +266,24 @@ const ServiceLayout: React.FC<ServiceLayoutProps> = ({ services }) => {
                   <tr key={index} className="bg-white">
                     <td className="p-3 pl-6 text-gray-600">
                       →{" "}
-                      <a
-                        href={
-                          form.file
-                            ? form.file instanceof File
-                              ? URL.createObjectURL(form.file) // Blob URL for the file
-                              : `${process.env.NEXT_PUBLIC_API_URL}/${form.file}` // Use the correct API URL for services
-                            : "#"
-                        }
-                        target="_blank" // Ensure the file opens in a new tab
-                        rel="noopener noreferrer"
-                        className="text-blue-500 hover:underline text-md ml-2"
-                        onClick={() => {}}
-                      >
-                        {form.name}
-                      </a>
+                      {form.file ? (
+                        <a
+                          href={
+                            form.file instanceof File
+                              ? URL.createObjectURL(form.file)
+                              : `${process.env.NEXT_PUBLIC_API_URL}/${form.file}`
+                          }
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-blue-500 hover:underline text-md ml-2"
+                        >
+                          {form.name}
+                        </a>
+                      ) : (
+                        <span className="text-gray-400 text-md ml-2 cursor-not-allowed">
+                          {form.name}
+                        </span>
+                      )}
                       <p className="text-gray-500 text-sm mt-1">
                         {form.description}
                       </p>

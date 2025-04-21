@@ -31,12 +31,7 @@ const validationSchema = Yup.object().shape({
   forms: Yup.array().of(
     Yup.object().shape({
       name: Yup.string().required("Form name is required"),
-      file: Yup.mixed()
-        .nullable()
-        .required("File is required")
-        .test("fileType", "Must be a valid file", (value) => {
-          return value instanceof File;
-        }),
+      file: Yup.mixed().nullable(),
       price: Yup.string().required("Price is required"),
       description: Yup.string().required("Description is required"),
     })
@@ -146,7 +141,7 @@ export default function AddServiceModal({ isOpen, onClose }: AddModalProps) {
                       name: "",
                       file: null, // Set file as null initially
                       price: "",
-                      description: "",
+                      description: "N/A",
                     },
                   ],
                 }}
@@ -229,21 +224,6 @@ export default function AddServiceModal({ isOpen, onClose }: AddModalProps) {
                                   />
                                   <ErrorMessage
                                     name={`forms[${index}].price`}
-                                    component="p"
-                                    className="text-red-500 text-sm"
-                                  />
-                                </div>
-
-                                <div>
-                                  <label className="block text-gray-700">
-                                    Description
-                                  </label>
-                                  <Field
-                                    name={`forms[${index}].description`}
-                                    className="w-full px-4 py-2 border rounded focus:ring focus:ring-blue-300"
-                                  />
-                                  <ErrorMessage
-                                    name={`forms[${index}].description`}
                                     component="p"
                                     className="text-red-500 text-sm"
                                   />
