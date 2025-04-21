@@ -163,21 +163,30 @@ const AddModal: React.FC<AddModalProps> = ({
 
       console.log("✅ Server response:", result);
 
-      // Safely access the downloads array and iterate
-      if (result.downloads && Array.isArray(result.downloads)) {
-        result.downloads.forEach((url) => {
+      // Validate that result.downloads is an array and has valid URLs
+      const validDownloads = Array.isArray(result?.downloads)
+        ? result.downloads.filter(
+            (url) => typeof url === "string" && url.trim() !== ""
+          )
+        : [];
+      console.log(validDownloads);
+      if (validDownloads.length > 0) {
+        validDownloads.forEach((url) => {
           const link = document.createElement("a");
           link.href = url;
-          link.download = ""; // Let browser determine filename
+          link.download = ""; // Let browser handle filename
+          link.target = "_blank"; // Optional: open in new tab if needed
           document.body.appendChild(link);
           link.click();
           document.body.removeChild(link);
         });
       } else {
-        console.warn("⚠️ No downloads returned");
+        console.warn(
+          "⚠️ No valid downloads returned. Skipping download process."
+        );
       }
 
-      if (onSuccess) onSuccess(); // <- Call the callback
+      if (onSuccess) onSuccess(); // Optional success callback
 
       onClose(); // Close modal
     } catch (error) {

@@ -246,180 +246,182 @@ export default function AddModal({ isOpen, onClose }: AddModalProps) {
                     <FieldArray name="business">
                       {({ push, remove }) => (
                         <>
-                          {values.business.map((_, index) => (
-                            <div
-                              key={index}
-                              className="grid grid-cols-3 gap-4 mt-4"
-                            >
-                              <div>
-                                <label className="block text-gray-700">
-                                  Business Name
-                                </label>
-                                <Field
-                                  name={`business[${index}].business_name`}
-                                  className="w-full px-4 py-2 border rounded focus:ring focus:ring-blue-300"
-                                />
-                                <ErrorMessage
-                                  name={`business[${index}].business_name`}
-                                  component="p"
-                                  className="text-red-500 text-sm"
-                                />
-                              </div>
+                          <div className="max-h-96 overflow-y-auto">
+                            {values.business.map((_, index) => (
+                              <div
+                                key={index}
+                                className="grid grid-cols-3 gap-4 mt-4"
+                              >
+                                <div>
+                                  <label className="block text-gray-700">
+                                    Business Name
+                                  </label>
+                                  <Field
+                                    name={`business[${index}].business_name`}
+                                    className="w-full px-4 py-2 border rounded focus:ring focus:ring-blue-300"
+                                  />
+                                  <ErrorMessage
+                                    name={`business[${index}].business_name`}
+                                    component="p"
+                                    className="text-red-500 text-sm"
+                                  />
+                                </div>
 
-                              <div>
-                                <label className="block text-gray-700">
-                                  Line of Business
-                                </label>
-                                <Field
-                                  name={`business[${index}].line_of_business`}
-                                  className="w-full px-4 py-2 border rounded focus:ring focus:ring-blue-300"
-                                />
-                                <ErrorMessage
-                                  name={`business[${index}].line_of_business`}
-                                  component="p"
-                                  className="text-red-500 text-sm"
-                                />
-                              </div>
+                                <div>
+                                  <label className="block text-gray-700">
+                                    Line of Business
+                                  </label>
+                                  <Field
+                                    name={`business[${index}].line_of_business`}
+                                    className="w-full px-4 py-2 border rounded focus:ring focus:ring-blue-300"
+                                  />
+                                  <ErrorMessage
+                                    name={`business[${index}].line_of_business`}
+                                    component="p"
+                                    className="text-red-500 text-sm"
+                                  />
+                                </div>
 
-                              <div>
-                                <label className="block text-gray-700">
-                                  Registered Address
-                                </label>
-                                <Field
-                                  name={`business[${index}].registered_address`}
-                                  className="w-full px-4 py-2 border rounded focus:ring focus:ring-blue-300"
-                                />
-                                <ErrorMessage
-                                  name={`business[${index}].registered_address`}
-                                  component="p"
-                                  className="text-red-500 text-sm"
-                                />
-                              </div>
+                                <div>
+                                  <label className="block text-gray-700">
+                                    Registered Address
+                                  </label>
+                                  <Field
+                                    name={`business[${index}].registered_address`}
+                                    className="w-full px-4 py-2 border rounded focus:ring focus:ring-blue-300"
+                                  />
+                                  <ErrorMessage
+                                    name={`business[${index}].registered_address`}
+                                    component="p"
+                                    className="text-red-500 text-sm"
+                                  />
+                                </div>
 
-                              <div>
-                                <label className="block text-gray-700">
-                                  Started Date
-                                </label>
-                                <Field
-                                  name={`business[${index}].started_date`}
-                                  type="date"
-                                  className="w-full px-4 py-2 border rounded focus:ring focus:ring-blue-300"
-                                />
-                                <ErrorMessage
-                                  name={`business[${index}].started_date`}
-                                  component="p"
-                                  className="text-red-500 text-sm"
-                                />
-                              </div>
+                                <div>
+                                  <label className="block text-gray-700">
+                                    Started Date
+                                  </label>
+                                  <Field
+                                    name={`business[${index}].started_date`}
+                                    type="date"
+                                    className="w-full px-4 py-2 border rounded focus:ring focus:ring-blue-300"
+                                  />
+                                  <ErrorMessage
+                                    name={`business[${index}].started_date`}
+                                    component="p"
+                                    className="text-red-500 text-sm"
+                                  />
+                                </div>
 
-                              <div>
-                                <label className="block text-gray-700">
-                                  TIN
-                                </label>
-                                <Field name={`business[${index}].tin`}>
-                                  {({ field, form }) => {
-                                    const formatTIN = (value) => {
-                                      // Remove non-alphanumerics and limit to 12 characters
-                                      const cleaned = value
-                                        .replace(/[^a-zA-Z0-9]/g, "")
-                                        .slice(0, 12);
+                                <div>
+                                  <label className="block text-gray-700">
+                                    TIN
+                                  </label>
+                                  <Field name={`business[${index}].tin`}>
+                                    {({ field, form }) => {
+                                      const formatTIN = (value) => {
+                                        // Remove non-alphanumerics and limit to 12 characters
+                                        const cleaned = value
+                                          .replace(/[^a-zA-Z0-9]/g, "")
+                                          .slice(0, 12);
+                                        return (
+                                          cleaned.match(/.{1,3}/g)?.join("-") ||
+                                          ""
+                                        );
+                                      };
+
+                                      const handleChange = (e) => {
+                                        const cleaned = e.target.value
+                                          .replace(/[^a-zA-Z0-9]/g, "")
+                                          .slice(0, 12);
+                                        const formatted = formatTIN(cleaned);
+                                        form.setFieldValue(
+                                          `business[${index}].tin`,
+                                          formatted
+                                        );
+                                      };
+
+                                      const handleBlur = () => {
+                                        let cleaned = field.value.replace(
+                                          /[^a-zA-Z0-9]/g,
+                                          ""
+                                        );
+                                        if (cleaned.length < 12) {
+                                          cleaned =
+                                            cleaned +
+                                            "0".repeat(12 - cleaned.length);
+                                        }
+                                        const formatted = formatTIN(cleaned);
+                                        form.setFieldValue(
+                                          `business[${index}].tin`,
+                                          formatted
+                                        );
+                                      };
+
                                       return (
-                                        cleaned.match(/.{1,3}/g)?.join("-") ||
-                                        ""
+                                        <input
+                                          {...field}
+                                          className="w-full px-4 py-2 border rounded focus:ring focus:ring-blue-300"
+                                          onChange={handleChange}
+                                          onBlur={handleBlur}
+                                          value={field.value}
+                                        />
                                       );
-                                    };
+                                    }}
+                                  </Field>
+                                  <ErrorMessage
+                                    name={`business[${index}].tin`}
+                                    component="p"
+                                    className="text-red-500 text-sm"
+                                  />
+                                </div>
 
-                                    const handleChange = (e) => {
-                                      const cleaned = e.target.value
-                                        .replace(/[^a-zA-Z0-9]/g, "")
-                                        .slice(0, 12);
-                                      const formatted = formatTIN(cleaned);
-                                      form.setFieldValue(
-                                        `business[${index}].tin`,
-                                        formatted
-                                      );
-                                    };
+                                <div>
+                                  <label className="block text-gray-700">
+                                    Zip Code
+                                  </label>
+                                  <Field
+                                    name={`business[${index}].zip_code`}
+                                    className="w-full px-4 py-2 border rounded focus:ring focus:ring-blue-300"
+                                  />
+                                  <ErrorMessage
+                                    name={`business[${index}].zip_code`}
+                                    component="p"
+                                    className="text-red-500 text-sm"
+                                  />
+                                </div>
 
-                                    const handleBlur = () => {
-                                      let cleaned = field.value.replace(
-                                        /[^a-zA-Z0-9]/g,
-                                        ""
-                                      );
-                                      if (cleaned.length < 12) {
-                                        cleaned =
-                                          cleaned +
-                                          "0".repeat(12 - cleaned.length);
-                                      }
-                                      const formatted = formatTIN(cleaned);
-                                      form.setFieldValue(
-                                        `business[${index}].tin`,
-                                        formatted
-                                      );
-                                    };
-
-                                    return (
-                                      <input
-                                        {...field}
-                                        className="w-full px-4 py-2 border rounded focus:ring focus:ring-blue-300"
-                                        onChange={handleChange}
-                                        onBlur={handleBlur}
-                                        value={field.value}
-                                      />
-                                    );
-                                  }}
-                                </Field>
-                                <ErrorMessage
-                                  name={`business[${index}].tin`}
-                                  component="p"
-                                  className="text-red-500 text-sm"
-                                />
+                                {/* Remove Button for Business */}
+                                <div className="flex justify-center items-center">
+                                  <button
+                                    type="button"
+                                    onClick={() => remove(index)}
+                                    className="px-4 py-2 text-red-500 hover:text-red-700"
+                                  >
+                                    Remove
+                                  </button>
+                                </div>
                               </div>
+                            ))}
 
-                              <div>
-                                <label className="block text-gray-700">
-                                  Zip Code
-                                </label>
-                                <Field
-                                  name={`business[${index}].zip_code`}
-                                  className="w-full px-4 py-2 border rounded focus:ring focus:ring-blue-300"
-                                />
-                                <ErrorMessage
-                                  name={`business[${index}].zip_code`}
-                                  component="p"
-                                  className="text-red-500 text-sm"
-                                />
-                              </div>
-
-                              {/* Remove Button for Business */}
-                              <div className="flex justify-center items-center">
-                                <button
-                                  type="button"
-                                  onClick={() => remove(index)}
-                                  className="px-4 py-2 text-red-500 hover:text-red-700"
-                                >
-                                  Remove
-                                </button>
-                              </div>
-                            </div>
-                          ))}
-
-                          {/* Add New Business Button */}
-                          <button
-                            type="button"
-                            onClick={() =>
-                              push({
-                                business_name: "",
-                                line_of_business: "",
-                                registered_address: "",
-                                started_date: "",
-                                tin: "",
-                                zip_code: "",
-                              })
-                            }
-                            className="mt-4 px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
-                          >
-                            Add Another Business
-                          </button>
+                            {/* Add New Business Button */}
+                            <button
+                              type="button"
+                              onClick={() =>
+                                push({
+                                  business_name: "",
+                                  line_of_business: "",
+                                  registered_address: "",
+                                  started_date: "",
+                                  tin: "",
+                                  zip_code: "",
+                                })
+                              }
+                              className="mt-4 px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
+                            >
+                              Add Another Business
+                            </button>
+                          </div>
                         </>
                       )}
                     </FieldArray>

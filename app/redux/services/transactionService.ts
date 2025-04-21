@@ -160,7 +160,7 @@ export const deleteTransactionThunk = createAsyncThunk(
       showToast("Transaction deleted successfully!", "success");
       return id;  // Return the id to update the state
     } catch (error) {
-      showToast("Failed to delete transaction", "error");
+ 
       return rejectWithValue(error.message || "Failed to delete transaction");
     }
   }

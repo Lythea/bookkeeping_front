@@ -151,7 +151,7 @@ export const deleteFormThunk = createAsyncThunk(
 
     } catch (error) {
       console.error("Error in deleteFormThunk:", error);
-      showToast("Failed to delete form", "error");
+ 
       return rejectWithValue(error instanceof Error ? error.message : "Unknown error");
     }
   }
